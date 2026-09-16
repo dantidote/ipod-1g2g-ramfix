@@ -1,0 +1,285 @@
+{
+  "status": "passed",
+  "unicorn_version": "2.1.4",
+  "scope": "Original and final on-disk ARM routines; chosen 16 MiB heap; synchronization bypassed; no full boot, playback, or hardware test.",
+  "runtime_code_injection": false,
+  "original_raw_sha256": "af3950c2253dfd0a9f743440f01634ddb8ce018115c05d9ca0e675912202a3df",
+  "patched_raw_sha256": "59b584ecffbbc802315ed506cd75bba130ec9797d6aa6c6379d80c335cc6300e",
+  "container": {
+    "changed_bytes": 19,
+    "changed_offsets": [
+      "0x401c",
+      "0x401d",
+      "0x421c",
+      "0x421d",
+      "0x390a4",
+      "0x390a9",
+      "0x390aa",
+      "0x390ab",
+      "0x390ac",
+      "0x390ad",
+      "0x390ae",
+      "0x390b0",
+      "0x390b1",
+      "0x390b2",
+      "0x390b3",
+      "0x390b4",
+      "0x390b5",
+      "0x390b6",
+      "0x390b7"
+    ],
+    "exact_reverse_patch": true,
+    "unsupported_and_corrupt_input_rejected": true,
+    "existing_output_preserved": true,
+    "both_osos_checksums_valid": true,
+    "aupd_payload_unchanged_and_checksum_valid": true
+  },
+  "handle_semantics": {
+    "null_returns_minus_50": true,
+    "backing_then_handle_free": true,
+    "stack_and_registers_preserved": true,
+    "boundary_allocations": 26,
+    "after_dispose": {
+      "free_bytes": 16777204,
+      "used_bytes": 0
+    }
+  },
+  "growth_and_failure": {
+    "growth_copy_verified": true,
+    "both_allocation_failure_paths_verified": true,
+    "after_dispose": {
+      "free_bytes": 16777204,
+      "used_bytes": 0
+    }
+  },
+  "shared_pool": {
+    "insertions": 1000,
+    "unique_strings": 200,
+    "used_bytes": 10140,
+    "reference_count_and_compaction_verified": true,
+    "after_dispose": {
+      "free_bytes": 16777204,
+      "used_bytes": 0
+    }
+  },
+  "other_owners": {
+    "array_resize_and_copy_verified": true,
+    "handle_copy_verified": true,
+    "resource_constructor_copy_and_disposal_verified": true,
+    "after_dispose": {
+      "free_bytes": 16777204,
+      "used_bytes": 0
+    }
+  },
+  "original_9000_titles": {
+    "strings_per_cycle": 9000,
+    "cycles": 1,
+    "all_strings_verified": true,
+    "steps": [
+      {
+        "cycle": 1,
+        "strings": 1000,
+        "free_bytes": 16567108,
+        "used_bytes": 210096
+      },
+      {
+        "cycle": 1,
+        "strings": 3000,
+        "free_bytes": 15063868,
+        "used_bytes": 1713336
+      },
+      {
+        "cycle": 1,
+        "strings": 5000,
+        "free_bytes": 12101428,
+        "used_bytes": 4675776
+      },
+      {
+        "cycle": 1,
+        "strings": 7000,
+        "free_bytes": 7679788,
+        "used_bytes": 9097416
+      },
+      {
+        "cycle": 1,
+        "strings": 9000,
+        "free_bytes": 1798948,
+        "used_bytes": 14978256
+      }
+    ],
+    "after_dispose": {
+      "free_bytes": 1798980,
+      "used_bytes": 14978224
+    },
+    "allocation_observer_passed": true
+  },
+  "patched_9000_titles": {
+    "strings_per_cycle": 9000,
+    "cycles": 1,
+    "all_strings_verified": true,
+    "steps": [
+      {
+        "cycle": 1,
+        "strings": 1000,
+        "free_bytes": 16728716,
+        "used_bytes": 48488
+      },
+      {
+        "cycle": 1,
+        "strings": 3000,
+        "free_bytes": 16630796,
+        "used_bytes": 146408
+      },
+      {
+        "cycle": 1,
+        "strings": 5000,
+        "free_bytes": 16532876,
+        "used_bytes": 244328
+      },
+      {
+        "cycle": 1,
+        "strings": 7000,
+        "free_bytes": 16434956,
+        "used_bytes": 342248
+      },
+      {
+        "cycle": 1,
+        "strings": 9000,
+        "free_bytes": 16337036,
+        "used_bytes": 440168
+      }
+    ],
+    "after_dispose": {
+      "free_bytes": 16777204,
+      "used_bytes": 0
+    },
+    "allocation_observer_passed": true
+  },
+  "patched_20000_varied_titles": {
+    "strings_per_cycle": 20000,
+    "cycles": 3,
+    "all_strings_verified": true,
+    "steps": [
+      {
+        "cycle": 1,
+        "strings": 1000,
+        "free_bytes": 16679564,
+        "used_bytes": 97640
+      },
+      {
+        "cycle": 1,
+        "strings": 3000,
+        "free_bytes": 16483340,
+        "used_bytes": 293864
+      },
+      {
+        "cycle": 1,
+        "strings": 5000,
+        "free_bytes": 16287116,
+        "used_bytes": 490088
+      },
+      {
+        "cycle": 1,
+        "strings": 7000,
+        "free_bytes": 16090892,
+        "used_bytes": 686312
+      },
+      {
+        "cycle": 1,
+        "strings": 9000,
+        "free_bytes": 15894668,
+        "used_bytes": 882536
+      },
+      {
+        "cycle": 1,
+        "strings": 20000,
+        "free_bytes": 14799052,
+        "used_bytes": 1978152
+      },
+      {
+        "cycle": 2,
+        "strings": 1000,
+        "free_bytes": 16679564,
+        "used_bytes": 97640
+      },
+      {
+        "cycle": 2,
+        "strings": 3000,
+        "free_bytes": 16483340,
+        "used_bytes": 293864
+      },
+      {
+        "cycle": 2,
+        "strings": 5000,
+        "free_bytes": 16287116,
+        "used_bytes": 490088
+      },
+      {
+        "cycle": 2,
+        "strings": 7000,
+        "free_bytes": 16090892,
+        "used_bytes": 686312
+      },
+      {
+        "cycle": 2,
+        "strings": 9000,
+        "free_bytes": 15894668,
+        "used_bytes": 882536
+      },
+      {
+        "cycle": 2,
+        "strings": 20000,
+        "free_bytes": 14799052,
+        "used_bytes": 1978152
+      },
+      {
+        "cycle": 3,
+        "strings": 1000,
+        "free_bytes": 16679564,
+        "used_bytes": 97640
+      },
+      {
+        "cycle": 3,
+        "strings": 3000,
+        "free_bytes": 16483340,
+        "used_bytes": 293864
+      },
+      {
+        "cycle": 3,
+        "strings": 5000,
+        "free_bytes": 16287116,
+        "used_bytes": 490088
+      },
+      {
+        "cycle": 3,
+        "strings": 7000,
+        "free_bytes": 16090892,
+        "used_bytes": 686312
+      },
+      {
+        "cycle": 3,
+        "strings": 9000,
+        "free_bytes": 15894668,
+        "used_bytes": 882536
+      },
+      {
+        "cycle": 3,
+        "strings": 20000,
+        "free_bytes": 14799052,
+        "used_bytes": 1978152
+      }
+    ],
+    "after_dispose": {
+      "free_bytes": 16777204,
+      "used_bytes": 0
+    },
+    "allocation_observer_passed": true
+  },
+  "flashpod_loader": {
+    "loader_accepted_image": true,
+    "payloads_preserved": true,
+    "normalized_image_sha256": "56a37b722a182cd5866253858a51eec942d88522556ec3e25204a9f9f43d6492",
+    "loader_source_sha256": "d3e4a456f0374a34f14835a18c5a234fd1ed9394184fb21b063f087c6a8eb774",
+    "device_operations_performed": false
+  }
+}

@@ -1,0 +1,12 @@
+# Public-source allowlist. Add new public filenames deliberately.
+*
+!/.gitignore
+!/README.md
+!/RESEARCH.md
+!/PUBLISHING.md
+!/NOTICE.md
+!/LICENSE
+!/patch_firmware.py
+!/test_firmware.py
+!/test-results.json
+!/SHA256SUMS
