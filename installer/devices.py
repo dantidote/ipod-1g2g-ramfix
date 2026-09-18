@@ -50,7 +50,7 @@ def windows_candidates(rows):
     for row in rows:
         if not (str(row.get("Bus")) in ("1394", "IEEE 1394") and
                 re.search(r"\bipod\b", str(row.get("Name", "")), re.I) and
-                not any(row.get(x, True) for x in ("Boot", "System", "Offline", "ReadOnly")) and
+                all(row.get(x) is False for x in ("Boot", "System", "Offline", "ReadOnly")) and
                 row.get("Sector") == SECTOR and str(row.get("Serial", "")).strip() and
                 row.get("Pnp")):
             continue
@@ -249,7 +249,15 @@ class RawDisk:
                 raise ctypes.WinError(ctypes.get_last_error())
             data = buf.raw[:count.value]
         else:
-            data = os.pread(self.fd, length, offset)
+            # Early FireWire iPod bridges can return corrupt/zeroed data for
+            # multi-sector macOS transfers. Use the unbuffered rdisk node and
+            # one sector per syscall, regardless of the caller's chunk size.
+            chunks = []
+            for position in range(offset, offset + length, SECTOR):
+                chunk = os.pread(self.fd, SECTOR, position)
+                require(len(chunk) == SECTOR, "Short disk read")
+                chunks.append(chunk)
+            data = b"".join(chunks)
         require(len(data) == length, "Short disk read")
         return data
 

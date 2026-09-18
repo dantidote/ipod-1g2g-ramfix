@@ -165,11 +165,12 @@ def save_backup(folder, identity, before, version):
     durable_new(folder / "backup.json", (json.dumps(metadata, indent=2) + "\n").encode())
     # Persist the new directory entries, not just their file contents, on macOS.
     if os.name == "posix":
-        fd = os.open(folder, os.O_RDONLY)
-        try:
-            os.fsync(fd)
-        finally:
-            os.close(fd)
+        for directory in (folder, folder.parent):
+            fd = os.open(directory, os.O_RDONLY)
+            try:
+                os.fsync(fd)
+            finally:
+                os.close(fd)
     return after
 
 

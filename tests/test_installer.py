@@ -209,7 +209,7 @@ class SelectionTests(unittest.TestCase):
         self.assertEqual(len(devices.windows_candidates([row])), 1)
         for key, value in (("Bus", "SATA"), ("Boot", True), ("System", True),
                            ("ReadOnly", True), ("Offline", True), ("Serial", ""),
-                           ("Sector", 4096), ("Name", "USB reader"), ("Pnp", "")):
+                           ("Sector", 4096), ("Name", "USB reader"), ("Pnp", ""), ("Boot", None)):
             self.assertEqual(devices.windows_candidates([dict(row, **{key: value})]), [])
 
     def test_mac_checks_guid_bus_writability_and_system_disk(self):
@@ -232,6 +232,44 @@ class SelectionTests(unittest.TestCase):
         with patch.object(devices, "scan", return_value=[{"id": "2", "identity": {"id": "new"}}]):
             with self.assertRaisesRegex(ValueError, "disconnected or changed"):
                 devices.selected("2", {"id": "old"})
+
+
+class NativeBoundaryTests(unittest.TestCase):
+    def raw(self):
+        disk = devices.RawDisk.__new__(devices.RawDisk)
+        disk.windows, disk.closed, disk.writable = False, False, True
+        disk.fd, disk.allowed = 123, frozenset({5})
+        return disk
+
+    def test_mac_reads_always_use_single_sector_syscalls(self):
+        disk = self.raw()
+        with patch.object(devices.os, "pread", create=True, return_value=b"a" * 512) as read:
+            self.assertEqual(disk.read(1024, 1536), b"a" * 1536)
+            self.assertEqual([c.args for c in read.call_args_list],
+                             [(123, 512, 1024), (123, 512, 1536), (123, 512, 2048)])
+
+    def test_mac_short_read_stops_immediately(self):
+        with patch.object(devices.os, "pread", create=True, return_value=b"a" * 256) as read:
+            with self.assertRaisesRegex(ValueError, "Short disk read"):
+                self.raw().read(0, 1024)
+            self.assertEqual(read.call_count, 1)
+
+    def test_raw_write_guard_blocks_unapproved_or_unaligned_access(self):
+        disk = self.raw()
+        with patch.object(devices.os, "pwrite", create=True) as write:
+            for number, data in ((0, b"a" * 512), (5, b"a" * 1024), (5, b"a" * 511)):
+                with self.assertRaises(ValueError):
+                    disk.write_sector(number, data)
+            write.assert_not_called()
+
+    def test_mac_sector_write_flushes_and_verifies(self):
+        disk = self.raw()
+        with patch.object(devices.os, "pwrite", create=True, return_value=512) as write, \
+             patch.object(devices.os, "fsync") as flush, \
+             patch.object(devices.os, "pread", create=True, return_value=b"b" * 512):
+            disk.write_sector(5, b"b" * 512)
+            write.assert_called_once_with(123, b"b" * 512, 2560)
+            flush.assert_called_once_with(123)
 
 
 class ServiceTests(FixtureCase):

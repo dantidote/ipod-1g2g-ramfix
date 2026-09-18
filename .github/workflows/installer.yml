@@ -3,7 +3,6 @@ on:
   workflow_dispatch:
   push:
     branches: [installer-preview]
-  pull_request:
 permissions:
   contents: read
 jobs:

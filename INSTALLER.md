@@ -56,6 +56,8 @@ Only the firmware sectors containing the patch and its checksums are written.
 The partition table and music partition are not written. The app locks or
 unmounts music volumes during installation, writes and verifies each changed
 sector, then verifies the complete firmware region again through a new handle.
+On Mac, reads use one sector per transfer to accommodate early FireWire bridge
+limitations. Checking, backup and verification can take several minutes.
 
 Unsigned previews may be blocked by Windows SmartScreen or macOS Gatekeeper.
 Verify the download source and checksum; use the operating system's per-app
