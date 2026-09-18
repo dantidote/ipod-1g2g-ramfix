@@ -28,6 +28,9 @@ Windows bundles target x64 Windows 10/11. Separate Mac bundles are built for
 Intel and Apple silicon; the build tests run on macOS 15. Older macOS versions
 have not been validated. An app running successfully does not establish that
 the computer/OS can communicate with a FireWire iPod.
+Apple's built-in FireWire support requires **macOS Sequoia 15 or earlier**;
+macOS Tahoe 26 and later cannot use this installer's FireWire connection.
+See [Apple's port compatibility guidance](https://support.apple.com/en-us/109523).
 
 ## Install
 

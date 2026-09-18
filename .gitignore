@@ -19,6 +19,7 @@
 !/installer/devices.py
 !/installer/service.py
 !/installer/app.py
+!/installer/view.py
 !/tests/
 !/tests/test_installer.py
 !/.github/

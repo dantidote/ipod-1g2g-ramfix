@@ -15,6 +15,7 @@ import traceback
 
 from . import VERSION
 from .core import durable_new
+from .view import InstallerView
 
 
 def command():
@@ -69,7 +70,7 @@ def perform(request):
         return data["result"]
 
 
-class App:
+class App(InstallerView):
     def __init__(self, root):
         import tkinter as tk
         from tkinter import ttk
@@ -77,47 +78,9 @@ class App:
         self.devices, self.checked = [], None
         self.busy = False
         self.messages = queue.Queue()
-        root.title("iPod RAM Fix — preview")
-        root.minsize(700, 580)
-        root.geometry("760x620")
+        self.action = None
         root.protocol("WM_DELETE_WINDOW", self.close)
-        panel = ttk.Frame(root, padding=24)
-        panel.pack(fill="both", expand=True)
-        ttk.Label(panel, text="Give your iPod room for its library", font=("", 19, "bold")).pack(anchor="w")
-        ttk.Label(panel, text="Experimental installer • " + VERSION, padding=(0, 8)).pack(anchor="w")
-        ttk.Label(panel, text="First- and second-generation FireWire iPods running Apple software 1.5.\n"
-                  "This preview supports Windows-formatted iPods on both Windows and Mac.\n"
-                  "Close iTunes and other iPod apps. Keep a separate copy of your music.",
-                  wraplength=680, justify="left").pack(anchor="w", pady=(0, 18))
-        self.scan_button = ttk.Button(panel, text="1. Find my iPod", command=self.scan)
-        self.scan_button.pack(anchor="w")
-        self.choice = ttk.Combobox(panel, state="readonly")
-        self.choice.pack(fill="x", pady=10)
-        self.choice.bind("<<ComboboxSelected>>", lambda event: self.changed())
-        self.check_button = ttk.Button(panel, text="2. Check compatibility", command=self.check)
-        self.check_button.pack(anchor="w")
-        self.version = ttk.Combobox(panel, state="readonly", values=(
-            "Memory leak fix (v1 — published patch)", "Memory fix + larger buffers (v2 — experimental)"))
-        self.version.current(0)
-        self.version.pack(fill="x", pady=10)
-        self.version.bind("<<ComboboxSelected>>", lambda event: self.refresh_buttons())
-        self.install_button = ttk.Button(panel, text="3. Back up and install", command=self.install)
-        self.install_button.pack(anchor="w")
-        ttk.Separator(panel).pack(fill="x", pady=18)
-        row = ttk.Frame(panel)
-        row.pack(fill="x")
-        self.restore_button = ttk.Button(row, text="Restore backup…", command=self.restore)
-        self.restore_button.pack(side="left")
-        self.eject_button = ttk.Button(row, text="Eject iPod", command=self.eject)
-        self.eject_button.pack(side="left", padx=12)
-        ttk.Button(row, text="Help & licenses", command=self.about).pack(side="right")
-        self.progress = ttk.Progressbar(panel, mode="indeterminate")
-        self.progress.pack(fill="x", pady=(18, 10))
-        self.status = tk.StringVar(value="Connect your iPod with FireWire, then choose Find my iPod.")
-        ttk.Label(panel, textvariable=self.status, wraplength=680, justify="left").pack(anchor="w")
-        ttk.Label(panel, text="No firmware downloads. Your backup stays on your computer.\n"
-                  "The new installer is a preview; its Mac device-writing path needs a hardware trial.",
-                  wraplength=680, justify="left").pack(anchor="w", side="bottom", pady=(14, 0))
+        self.build_interface()
         self.refresh_buttons()
         root.after(100, self.poll)
 
@@ -147,7 +110,7 @@ class App:
 
     def changed(self):
         self.checked = None
-        self.status.set("Choose Check compatibility before installing.")
+        self.feedback("Check your iPod", "Choose Check compatibility before installing.")
         self.refresh_buttons()
 
     def refresh_buttons(self):
@@ -155,18 +118,22 @@ class App:
         self.scan_button["state"] = "disabled" if self.busy else "normal"
         for button in (self.check_button, self.restore_button, self.eject_button):
             button["state"] = "normal" if device and not self.busy else "disabled"
-        target = ("v1", "v2")[max(0, self.version.current())]
+        target = self.version.get()
         can_install = self.checked and self.checked["state"] != target and not (
             self.checked["state"] == "v2" and target == "v1")
         self.install_button["state"] = "normal" if device and can_install and not self.busy else "disabled"
-        for choice in (self.choice, self.version):
-            choice["state"] = "disabled" if self.busy else "readonly"
+        self.choice["state"] = "disabled" if self.busy else "readonly"
+        for button in self.patch_buttons:
+            button["state"] = "disabled" if self.busy else "normal"
+        self.update_view(device)
 
     def start(self, request, callback, message):
         if self.busy:
             return
         self.busy = True
-        self.status.set(message + " Please keep the iPod connected.")
+        self.action = request["action"]
+        self.feedback(message, "Please keep the iPod connected. Checking and verification can take several minutes.", "busy")
+        self.progress.configure(mode="indeterminate", value=0)
         self.refresh_buttons()
         self.progress.start(12)
         def work():
@@ -184,15 +151,17 @@ class App:
         else:
             self.busy = False
             self.progress.stop()
+            self.progress.configure(mode="determinate", value=0)
             if error:
                 from tkinter import messagebox
                 self.checked = None
                 if getattr(self, "last_backup", None):
                     error += "\nSelected backup folder: " + self.last_backup
-                self.status.set(error)
+                self.feedback("Operation stopped", error if len(error) <= 220 else error[:217] + "…", "error")
                 messagebox.showerror("Operation stopped", error, parent=self.root)
             else:
                 callback(result)
+                self.progress.configure(mode="determinate", value=100)
             self.refresh_buttons()
         self.root.after(100, self.poll)
 
@@ -210,16 +179,15 @@ class App:
             self.choice.set("")
             if self.devices:
                 self.choice.current(0)
-                self.status.set("iPod found. Check compatibility next.")
+                self.feedback("iPod found", "Check compatibility to confirm its firmware before installing.", "success")
             else:
-                self.status.set("No supported FireWire iPod found. Check the cable, power and FireWire support. "
-                                "Card readers, USB-only iPods and internal disks are not eligible.")
+                self.feedback("No iPod found", "Check the FireWire cable and power. On Mac, FireWire requires macOS Sequoia 15 or earlier.")
         self.start({"action": "scan"}, done, "Looking for supported iPods.")
 
     def check(self):
         def done(result):
             self.checked = result
-            self.status.set(result["message"] + ". Choose a patch, then Back up and install.")
+            self.feedback("Compatibility confirmed", result["message"] + ". Choose your patch below.", "success")
         self.start(self.request("check"), done, "Checking the installed firmware.")
 
     def install(self):
@@ -227,7 +195,7 @@ class App:
         parent = filedialog.askdirectory(title="Save a firmware backup on your computer", parent=self.root)
         if not parent:
             return
-        version = ("v1", "v2")[self.version.current()]
+        version = self.version.get()
         device = self.selected()
         label = self.choice.get()
         if not messagebox.askokcancel("Install RAM fix?", "Install %s on:\n%s\n\n"
@@ -242,8 +210,8 @@ class App:
         self.last_backup = str(folder)
         def done(result):
             self.checked = None
-            self.status.set(result["message"] + "\nBackup: " + str(folder))
-        self.start(request, done, "Backing up and installing. Backup folder: " + str(folder) + ".")
+            self.feedback("Installation verified", result["message"] + "\nBackup: " + str(folder), "success")
+        self.start(request, done, "Backing up and installing")
 
     def restore(self):
         from tkinter import filedialog, messagebox
@@ -259,7 +227,7 @@ class App:
         request["backup_folder"] = str(Path(manifest).parent)
         def done(result):
             self.checked = None
-            self.status.set(result["message"])
+            self.feedback("Backup restored", result["message"], "success")
         self.start(request, done, "Restoring the saved firmware.")
 
     def eject(self):
@@ -267,7 +235,7 @@ class App:
             self.devices, self.checked = [], None
             self.choice.set("")
             self.choice["values"] = []
-            self.status.set(result["message"])
+            self.feedback("Safe to unplug", result["message"], "success")
         self.start(self.request("eject"), done, "Ejecting the iPod.")
 
     def close(self):
@@ -307,6 +275,9 @@ def main():
         if code <= 32:
             raise RuntimeError("Administrator access is required to inspect the iPod. No firmware changed.")
         return
+    if sys.platform == "win32":
+        # Let Tk render at the display's resolution instead of bitmap stretching.
+        ctypes.windll.shcore.SetProcessDpiAwareness(1)
     import tkinter as tk
     root = tk.Tk()
     app = App(root)
@@ -314,6 +285,29 @@ def main():
         root.update()
         result = {"ui": "passed", "device_access": False,
                   "install_disabled_without_check": str(app.install_button["state"]) == "disabled"}
+        # Exercise the actual radio-button commands and write guards offline.
+        app.devices = [{"id": "offline-ui-check"}]
+        app.choice["values"] = ["Offline UI check"]
+        app.choice.current(0)
+        app.refresh_buttons()
+        if str(app.install_button["state"]) != "disabled":
+            raise RuntimeError("An unchecked device enabled installation")
+        app.checked = {"state": "original"}
+        app.patch_buttons[1].invoke()
+        if app.version.get() != "v2" or str(app.install_button["state"]) != "normal":
+            raise RuntimeError("Patch selection did not update installation state")
+        app.checked = {"state": "v2"}
+        app.patch_buttons[0].invoke()
+        if str(app.install_button["state"]) != "disabled":
+            raise RuntimeError("The interface allowed a v2-to-v1 downgrade")
+        app.busy = True
+        app.action = "install"
+        app.refresh_buttons()
+        controls = [app.scan_button, app.check_button, app.install_button,
+                    app.restore_button, app.eject_button, app.choice, *app.patch_buttons]
+        if any(str(widget["state"]) != "disabled" for widget in controls):
+            raise RuntimeError("Device controls remained active during an operation")
+        result["patch_selection_and_busy_guards"] = "passed"
         root.destroy()
         if args.result:
             durable_new(args.result, json.dumps(result).encode())
