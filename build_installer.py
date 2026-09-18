@@ -1,6 +1,7 @@
 """Build native unsigned desktop bundles. Run on the destination OS."""
 import hashlib
 import json
+import os
 from pathlib import Path
 import platform
 import shutil
@@ -50,6 +51,16 @@ def main():
     shutil.copytree(bundle, stage / bundle.name, symlinks=True)
     for filename in ("LICENSE", "NOTICE.md", "INSTALLER.md"):
         shutil.copy2(root / filename, stage / filename)
+    shutil.copytree(root / "third_party_licenses", stage / "third_party_licenses")
+    import tkinter
+    import PyInstaller
+    interpreter = tkinter.Tcl()
+    provenance = {"installer_version": VERSION, "source_commit": os.environ.get("GITHUB_SHA"),
+                  "python_version": platform.python_version(), "architecture": machine,
+                  "tcl_version": interpreter.eval("info patchlevel"),
+                  "pyinstaller_version": PyInstaller.__version__,
+                  "packaged_import_and_ui_checks": "passed", "hardware_tested": False}
+    (stage / "BUILD-INFO.json").write_text(json.dumps(provenance, indent=2) + "\n")
     target = exports / (name + ".zip")
     if sys.platform == "darwin":
         # Preserve app framework symlinks and executable permissions.

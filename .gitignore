@@ -24,3 +24,10 @@
 !/.github/
 !/.github/workflows/
 !/.github/workflows/installer.yml
+!/third_party_licenses/
+!/third_party_licenses/Python-LICENSE.txt
+!/third_party_licenses/Python-additional-licenses.rst
+!/third_party_licenses/Tcl-license.terms
+!/third_party_licenses/Tk-license.terms
+!/third_party_licenses/PyInstaller-COPYING.txt
+!/third_party_licenses/SOURCES.md
