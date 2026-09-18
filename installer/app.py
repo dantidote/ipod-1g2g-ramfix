@@ -23,6 +23,13 @@ def command():
     return [sys.executable, str(Path(__file__).resolve().parents[1] / "install_ipod.py")]
 
 
+def documentation():
+    root = Path(sys._MEIPASS) / "docs" if getattr(sys, "frozen", False) else Path(__file__).resolve().parents[1]
+    paths = [root / name for name in ("INSTALLER.md", "LICENSE", "NOTICE.md")]
+    paths += sorted((root / "third_party_licenses").glob("*"))
+    return {path.name: path.read_text(encoding="utf-8") for path in paths if path.is_file()}
+
+
 def worker(path):
     from .service import execute
     folder = Path(path).resolve().parent
@@ -103,6 +110,7 @@ class App:
         self.restore_button.pack(side="left")
         self.eject_button = ttk.Button(row, text="Eject iPod", command=self.eject)
         self.eject_button.pack(side="left", padx=12)
+        ttk.Button(row, text="Help & licenses", command=self.about).pack(side="right")
         self.progress = ttk.Progressbar(panel, mode="indeterminate")
         self.progress.pack(fill="x", pady=(18, 10))
         self.status = tk.StringVar(value="Connect your iPod with FireWire, then choose Find my iPod.")
@@ -112,6 +120,26 @@ class App:
                   wraplength=680, justify="left").pack(anchor="w", side="bottom", pady=(14, 0))
         self.refresh_buttons()
         root.after(100, self.poll)
+
+    def about(self):
+        window = self.tk.Toplevel(self.root)
+        window.title("iPod RAM Fix — help and licenses")
+        window.geometry("820x650")
+        docs = documentation()
+        choices = self.ttk.Combobox(window, state="readonly", values=list(docs))
+        choices.pack(fill="x", padx=16, pady=12)
+        from tkinter.scrolledtext import ScrolledText
+        body = ScrolledText(window, wrap="word", padx=12, pady=12)
+        body.pack(fill="both", expand=True, padx=16, pady=(0, 16))
+        def show(event=None):
+            body.configure(state="normal")
+            body.delete("1.0", "end")
+            body.insert("1.0", docs.get(choices.get(), ""))
+            body.configure(state="disabled")
+        choices.bind("<<ComboboxSelected>>", show)
+        if docs:
+            choices.current(0)
+            show()
 
     def selected(self):
         index = self.choice.current()
@@ -264,6 +292,10 @@ def main():
     if args.self_test:
         from . import core, devices, service
         result = {"version": VERSION, "platform": sys.platform, "imports": "passed", "device_access": False}
+        docs = documentation()
+        if not all(name in docs for name in ("INSTALLER.md", "LICENSE", "Python-LICENSE.txt", "Tcl-license.terms")):
+            raise RuntimeError("Bundled help or license notices are missing")
+        result["bundled_documentation"] = "passed"
         if args.result:
             durable_new(args.result, json.dumps(result).encode())
         elif sys.stdout:

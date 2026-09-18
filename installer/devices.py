@@ -7,6 +7,7 @@ import re
 import subprocess
 import sys
 import time
+from pathlib import Path
 from contextlib import contextmanager
 
 from .core import MAX_PREFIX, SECTOR, require
@@ -158,6 +159,9 @@ def ioctl(k, h, code):
 
 def backup_location(folder, device):
     """The only usable rollback copy must not live on the iPod being patched."""
+    session = os.environ.get("IPOD_RAMFIX_SESSION_DIR")
+    require(not session or not Path(folder).resolve().is_relative_to(Path(session).resolve()),
+            "Save the backup outside the app's temporary folder, such as in Documents")
     if sys.platform == "win32":
         k, h = open_windows(str(folder), directory=True)
         try:

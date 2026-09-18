@@ -235,6 +235,12 @@ class SelectionTests(unittest.TestCase):
 
 
 class NativeBoundaryTests(unittest.TestCase):
+    def test_backup_cannot_be_saved_in_launcher_cleanup_directory(self):
+        with tempfile.TemporaryDirectory() as folder, \
+             patch.dict(devices.os.environ, {"IPOD_RAMFIX_SESSION_DIR": folder}):
+            with self.assertRaisesRegex(ValueError, "temporary folder"):
+                devices.backup_location(Path(folder) / "backup", {})
+
     def raw(self):
         disk = devices.RawDisk.__new__(devices.RawDisk)
         disk.windows, disk.closed, disk.writable = False, False, True

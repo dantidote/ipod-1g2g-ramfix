@@ -31,8 +31,8 @@ the computer/OS can communicate with a FireWire iPod.
 
 ## Install
 
-1. Download the archive for your computer and extract the entire archive.
-   Keep the Windows executable together with its `_internal` folder.
+1. On Windows, download the single `.exe`. No extra folders or setup are needed.
+   On Mac, extract the ZIP to get one **iPod-RAM-Fix.app** and open it.
 2. Connect the iPod using FireWire. Close iTunes, Music, Finder windows browsing
    the iPod, and other syncing applications. Keep a separate copy of your music.
 3. Open **iPod-RAM-Fix.exe** on Windows or **iPod-RAM-Fix.app** on Mac.
@@ -51,6 +51,17 @@ the computer/OS can communicate with a FireWire iPod.
 7. Keep power and FireWire connected. Wait for **Installation verified**.
 8. Choose **Eject iPod**, then restart it. Check artists, albums, songs, playback,
    full-library shuffle, and reshuffle. Retain the complete backup folder.
+
+The Windows executable contains the complete app. After administrator approval,
+its launcher expands support files into a new protected temporary folder under
+Program Files, runs the app, and removes that folder after normal exit. Only
+Administrators and SYSTEM can access those elevated runtime files; individual
+files and directories are also owned by Administrators. Backups must be saved
+elsewhere, such as Documents, so cleanup cannot remove them. A crash or forced
+shutdown can leave the temporary runtime folder behind.
+
+The Mac app contains its supporting files inside the `.app` bundle. Instructions
+and runtime notices are included in both versions under **Help & licenses**.
 
 Only the firmware sectors containing the patch and its checksums are written.
 The partition table and music partition are not written. The app locks or
@@ -95,14 +106,16 @@ Python 3.11 with Tk is used for packaged builds. From the project folder:
 python install_ipod.py
 ```
 
-The build uses PyInstaller and must run on the destination operating system:
+The build uses PyInstaller and must run on the destination operating system.
+The Windows build also uses the .NET Framework C# compiler supplied by Windows:
 
 ```sh
 python -m pip install PyInstaller==6.16.0
 python build_installer.py
 ```
 
-Outputs and SHA-256 files appear in `build/exports/`. The GitHub Actions workflow
+The single Windows executable or Mac app ZIP and SHA-256 files appear in
+`build/exports/`. The GitHub Actions workflow
 builds Windows x64, Mac Intel, and Mac Apple silicon separately. It uploads
 preview build artifacts, not a stable release. No firmware files enter the
 workflow. The application does not contact GitHub or any other server at runtime.

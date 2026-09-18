@@ -31,3 +31,5 @@
 !/third_party_licenses/Tk-license.terms
 !/third_party_licenses/PyInstaller-COPYING.txt
 !/third_party_licenses/SOURCES.md
+!/packaging/
+!/packaging/WindowsLauncher.cs
