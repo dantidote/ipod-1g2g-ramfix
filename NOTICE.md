@@ -1,6 +1,6 @@
 # Distribution notice
 
-This package contains newly written patching/test code, replacement instructions, file identifiers/checksums, research notes, and test results. It does not include an Apple firmware image, the original routine's instruction bytes, boot-ROM payloads, a firmware downloader, or personal device/library backups. Firmware is read only from a file supplied locally by the recipient.
+This package contains newly written patching/test/installer code, replacement instructions, file identifiers/checksums, research notes, and test results. It does not include an Apple firmware image, the original routine's instruction bytes, boot-ROM payloads, a firmware downloader, or personal device/library backups. Firmware is read locally from the recipient's own file or connected iPod. Device backups remain on the recipient's computer and must not be redistributed with this project.
 
 Apple retains any applicable rights in its firmware and trademarks. This project is independent and is not endorsed by Apple. The presence of a firmware hash, version identifier, or patch does not grant permission to download or redistribute the underlying firmware.
 

@@ -10,3 +10,17 @@
 !/test_firmware.py
 !/test-results.json
 !/SHA256SUMS
+!/INSTALLER.md
+!/install_ipod.py
+!/build_installer.py
+!/installer/
+!/installer/__init__.py
+!/installer/core.py
+!/installer/devices.py
+!/installer/service.py
+!/installer/app.py
+!/tests/
+!/tests/test_installer.py
+!/.github/
+!/.github/workflows/
+!/.github/workflows/installer.yml
