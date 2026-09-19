@@ -1,0 +1,39 @@
+name: Build installer previews
+on:
+  workflow_dispatch:
+  push:
+    branches: [installer-preview]
+permissions:
+  contents: read
+jobs:
+  bundle:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-2022
+            architecture: x64
+            label: windows-x64
+          - os: macos-15-intel
+            architecture: x64
+            label: macos-intel
+          - os: macos-15
+            architecture: arm64
+            label: macos-arm64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          architecture: ${{ matrix.architecture }}
+      - name: Install packaging dependency
+        run: python -m pip install PyInstaller==6.16.0
+      - name: Test and build native bundle
+        run: python build_installer.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: installer-${{ matrix.label }}
+          path: build/exports/*
+          if-no-files-found: error
+          retention-days: 30

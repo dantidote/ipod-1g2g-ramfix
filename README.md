@@ -4,7 +4,24 @@ A small patch for a reproducible memory leak in `iPod_1.1.5_2005_02_18`, the fam
 
 Project: [dantidote/ipod-1g2g-ramfix](https://github.com/dantidote/ipod-1g2g-ramfix). Download the [experimental release](https://github.com/dantidote/ipod-1g2g-ramfix/releases/tag/v1.0.0-alpha.1).
 
-**This distribution contains patching code, tests, and research notes. It does not contain an original or modified Apple firmware image. You must supply your own matching firmware file from a source you are authorized to use.** There is no downloader or device-writing installer in this package.
+**This distribution contains patching code, tests, and research notes. It does not contain an original or modified Apple firmware image.** The file-only patcher requires your own matching firmware file from a source you are authorized to use. The new desktop installer reads firmware from your own iPod. Neither tool downloads firmware.
+
+## Desktop installer preview
+
+An experimental desktop installer is available in this branch for **Windows x64, Mac Intel, and Mac Apple silicon**. It checks compatibility, saves a verified firmware backup, applies the published v1 memory-leak fix, verifies the complete firmware region, and supports restoring that same iPod's backup. See [installation and recovery instructions](INSTALLER.md).
+
+Windows is distributed as **one self-contained `.exe`**. Mac downloads contain
+one `.app` bundle. Help and license notices are embedded; no separate support
+folder needs to be kept alongside the download.
+The compact interface uses system controls and one main action at a time:
+find the iPod, check it, install, then eject. Restore and help are in **More**.
+The app installs v1 only; there is no patch selector.
+
+**Requires stock Apple firmware 1.5. Rockbox does not need this fix.** The leak
+is in Apple's firmware. Rockbox installations and other custom bootloaders are
+not supported, including installations that can also boot Apple's firmware.
+
+This preview accepts recognizable **first/second-generation FireWire iPods with a Windows-formatted MBR/FAT32 disk**. Mac-formatted Apple Partition Map disks and other firmware are refused. Its new general device workflows still need end-to-end hardware validation; the successful physical trial below used the earlier device-specific Windows writer. Build artifacts are unsigned previews, not a stable installer release. The existing `v1.0.0-alpha.1` release remains the file-only source package.
 
 ## Results so far
 
@@ -52,7 +69,7 @@ python patch_firmware.py revert patched.bin.gz restored.bin --original original.
 
 The public patcher does not embed the original routine's instruction bytes. Reversal therefore requires your original file. This only creates a local file; it does not roll back a device installation.
 
-## Installation is a separate step
+## Installing a file-only patcher's output
 
 The generated file retains the source container's **pre-install** directory state. It must be processed by an installer that understands the exact device and firmware layout. It is not a whole-disk image and must not be copied raw onto an iPod or its firmware partition.
 
