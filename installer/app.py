@@ -118,13 +118,9 @@ class App(InstallerView):
         self.scan_button["state"] = "disabled" if self.busy else "normal"
         for button in (self.check_button, self.restore_button, self.eject_button):
             button["state"] = "normal" if device and not self.busy else "disabled"
-        target = self.version.get()
-        can_install = self.checked and self.checked["state"] != target and not (
-            self.checked["state"] == "v2" and target == "v1")
+        can_install = self.checked and self.checked["state"] == "original"
         self.install_button["state"] = "normal" if device and can_install and not self.busy else "disabled"
         self.choice["state"] = "disabled" if self.busy else "readonly"
-        for button in self.patch_buttons:
-            button["state"] = "disabled" if self.busy else "normal"
         self.update_view(device)
 
     def start(self, request, callback, message):
@@ -167,7 +163,10 @@ class App(InstallerView):
 
     def request(self, action):
         device = self.selected()
-        return {"action": action, "device_id": device["id"], "identity": device["identity"]}
+        request = {"action": action, "device_id": device["id"], "identity": device["identity"]}
+        if action == "install":
+            request["version"] = "v1"
+        return request
 
     def scan(self):
         self.checked = None
@@ -187,7 +186,10 @@ class App(InstallerView):
     def check(self):
         def done(result):
             self.checked = result
-            self.feedback("Compatibility confirmed", result["message"] + ". Choose your patch below.", "success")
+            if result["state"] == "original":
+                self.feedback("Compatibility confirmed", "Ready to install the v1 memory leak fix. Choose Back up and install.", "success")
+            else:
+                self.feedback("Memory fix already installed", "No installation is needed. You can eject your iPod.", "success")
         self.start(self.request("check"), done, "Checking the installed firmware.")
 
     def install(self):
@@ -195,17 +197,15 @@ class App(InstallerView):
         parent = filedialog.askdirectory(title="Save a firmware backup on your computer", parent=self.root)
         if not parent:
             return
-        version = self.version.get()
-        device = self.selected()
         label = self.choice.get()
-        if not messagebox.askokcancel("Install RAM fix?", "Install %s on:\n%s\n\n"
+        if not messagebox.askokcancel("Install RAM fix?", "Install the v1 memory leak fix on:\n%s\n\n"
                 "Your firmware will be backed up first. The music partition will not be written.\n"
                 "Keep power and FireWire connected until verification finishes.\n\n"
-                "This is experimental software. Continue?" % (version, label), parent=self.root):
+                "This is experimental software. Continue?" % label, parent=self.root):
             return
         folder = Path(tempfile.mkdtemp(prefix="iPod-backup-" + time.strftime("%Y%m%d-") , dir=parent))
         request = self.request("install")
-        request.update(backup_folder=str(folder), version=version,
+        request.update(backup_folder=str(folder),
                        checked_sha256=self.checked["prefix_sha256"])
         self.last_backup = str(folder)
         def done(result):
@@ -285,29 +285,30 @@ def main():
         root.update()
         result = {"ui": "passed", "device_access": False,
                   "install_disabled_without_check": str(app.install_button["state"]) == "disabled"}
-        # Exercise the actual radio-button commands and write guards offline.
-        app.devices = [{"id": "offline-ui-check"}]
+        # Exercise the fixed v1 install request and write guards offline.
+        app.devices = [{"id": "offline-ui-check", "identity": {"offline": True}}]
         app.choice["values"] = ["Offline UI check"]
         app.choice.current(0)
         app.refresh_buttons()
         if str(app.install_button["state"]) != "disabled":
             raise RuntimeError("An unchecked device enabled installation")
         app.checked = {"state": "original"}
-        app.patch_buttons[1].invoke()
-        if app.version.get() != "v2" or str(app.install_button["state"]) != "normal":
-            raise RuntimeError("Patch selection did not update installation state")
-        app.checked = {"state": "v2"}
-        app.patch_buttons[0].invoke()
-        if str(app.install_button["state"]) != "disabled":
-            raise RuntimeError("The interface allowed a v2-to-v1 downgrade")
+        app.refresh_buttons()
+        if app.request("install")["version"] != "v1" or str(app.install_button["state"]) != "normal":
+            raise RuntimeError("The interface did not offer the v1 memory fix")
+        for installed in ("v1", "v2"):
+            app.checked = {"state": installed}
+            app.refresh_buttons()
+            if str(app.install_button["state"]) != "disabled":
+                raise RuntimeError("The interface allowed an unnecessary install or downgrade")
         app.busy = True
         app.action = "install"
         app.refresh_buttons()
         controls = [app.scan_button, app.check_button, app.install_button,
-                    app.restore_button, app.eject_button, app.choice, *app.patch_buttons]
+                    app.restore_button, app.eject_button, app.choice]
         if any(str(widget["state"]) != "disabled" for widget in controls):
             raise RuntimeError("Device controls remained active during an operation")
-        result["patch_selection_and_busy_guards"] = "passed"
+        result["v1_only_and_busy_guards"] = "passed"
         root.destroy()
         if args.result:
             durable_new(args.result, json.dumps(result).encode())

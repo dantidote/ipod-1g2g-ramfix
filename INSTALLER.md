@@ -41,18 +41,13 @@ See [Apple's port compatibility guidance](https://support.apple.com/en-us/109523
 3. Open **iPod-RAM-Fix.exe** on Windows or **iPod-RAM-Fix.app** on Mac.
    Windows requests administrator access at launch. Mac requests administrator
    access when checking or changing the device.
-4. Choose **Find my iPod**, select it by its displayed identity and capacity,
+4. Choose **Find iPod**, select it by its displayed identity and capacity,
    then choose **Check compatibility**. This reads firmware without writing it.
-5. Choose the patch:
-   - **v1:** the published memory-leak fix; the default.
-   - **v2:** the same fix plus larger library-storage increments and a correction
-     to the copy length when shrinking a buffer. This exact firmware was used
-     on the development iPod, but startup still took about 40 seconds. Do not
-     expect the isolated emulator speedup to translate into faster booting.
-6. Choose **Back up and install**, select a folder on your computer, and review
-   the device before confirming. The app creates a new backup subfolder.
-7. Keep power and FireWire connected. Wait for **Installation verified**.
-8. Choose **Eject iPod**, then restart it. Check artists, albums, songs, playback,
+5. Choose **Back up and install** to apply the published **v1 memory-leak fix**.
+   Select a folder on your computer and review the device before confirming.
+   The app creates a new backup subfolder. There are no patch options to choose.
+6. Keep power and FireWire connected. Wait for **Installation verified**.
+7. Choose **Eject iPod**, then restart it. Check artists, albums, songs, playback,
    full-library shuffle, and reshuffle. Retain the complete backup folder.
 
 The Windows executable contains the complete app. After administrator approval,
@@ -88,9 +83,9 @@ the firmware checksums invalid.
 
 The app verifies device identity and backup contents, permits recovery only
 within the sectors changed by that patch, and refuses changes elsewhere.
-Restore returns to the version present when that backup was made: a backup
-taken before a v1-to-v2 upgrade restores v1, not stock firmware. For this
-preview, restore on the same OS platform that made the backup.
+Restore returns to the firmware present when that backup was made. Backups
+from earlier previews remain supported. For this preview, restore on the same
+OS platform that made the backup.
 
 If a write fails, the app attempts to restore the prior sectors immediately.
 If it cannot verify recovery, keep the backup and reconnect the same iPod in

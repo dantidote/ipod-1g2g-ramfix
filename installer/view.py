@@ -18,13 +18,13 @@ class InstallerView:
         self.scale = max(1.0, root.winfo_fpixels("1i") / 96)
         px = lambda n: round(n * self.scale)
         root.title("iPod RAM Fix")
-        root.geometry("%dx%d" % (px(780), px(650)))
-        root.minsize(px(740), px(620))
+        root.geometry("%dx%d" % (px(780), px(510)))
+        root.minsize(px(740), px(490))
         root.configure(background=self.BG)
         root.option_add("*Font", (self.font, 10))
         self.make_styles()
         root.columnconfigure(0, weight=1)
-        root.rowconfigure(2, weight=1)
+        root.rowconfigure(1, weight=1)
 
         # A faint satin finish lives behind real controls, never a screenshot.
         surface = tk.Canvas(root, background=self.BG, highlightthickness=0)
@@ -68,7 +68,7 @@ class InstallerView:
         self.progress.pack(fill="both", expand=True)
 
         device = self.section(root, " Device ")
-        device.grid(row=1, column=0, sticky="ew", padx=px(20), pady=(0, px(13)))
+        device.grid(row=1, column=0, sticky="nsew", padx=px(20), pady=(0, px(13)))
         device.columnconfigure(0, weight=1)
         self.choice = ttk.Combobox(device, state="readonly", width=28)
         self.choice.grid(row=0, column=0, sticky="ew", padx=(0, px(12)), pady=(0, px(9)))
@@ -82,27 +82,13 @@ class InstallerView:
         self.compatibility = self.label(check_row, "Not checked", size=9, color=self.MUTED)
         self.compatibility.pack(side="left", padx=px(12))
 
-        patches = self.section(root, " Patch ")
-        patches.grid(row=2, column=0, sticky="nsew", padx=px(20), pady=(0, px(15)))
-        patches.columnconfigure(0, weight=1)
-        self.version = tk.StringVar(value="v1")
-        self.patch_buttons = []
-        options = (("v1", "Memory leak fix", "Published v1 patch. Recommended."),
-                   ("v2", "Memory fix + larger buffers", "Experimental v2 patch. Faster startup is not guaranteed."))
-        for i, (value, title, detail) in enumerate(options):
-            button = ttk.Radiobutton(patches, text=title, value=value, variable=self.version,
-                                     command=self.refresh_buttons, style="Patch.TRadiobutton")
-            button.grid(row=i * 2, column=0, sticky="w", pady=(px(9) if i else 0, 0))
-            self.patch_buttons.append(button)
-            self.label(patches, detail, size=9, color=self.MUTED).grid(
-                row=i * 2 + 1, column=0, sticky="w", padx=(px(24), 0), pady=(px(3), px(2)))
-
         bottom = tk.Frame(root, bg=self.BG)
-        bottom.grid(row=3, column=0, sticky="ew", padx=px(20), pady=(0, px(13)))
+        bottom.grid(row=2, column=0, sticky="ew", padx=px(20), pady=(0, px(13)))
         tk.Frame(bottom, bg="#a4a69e", height=1).pack(fill="x")
         tk.Frame(bottom, bg="#f6f6f3", height=1).pack(fill="x")
+        self.label(bottom, "Memory leak fix · v1", size=9, color=self.MUTED).pack(anchor="w", pady=(px(10), 0))
         actions = tk.Frame(bottom, bg=self.BG)
-        actions.pack(fill="x", pady=(px(15), px(10)))
+        actions.pack(fill="x", pady=(px(9), px(10)))
         self.eject_button = ttk.Button(actions, text="Eject iPod", command=self.eject, style="Metal.TButton")
         self.eject_button.pack(side="left")
         self.restore_button = ttk.Button(actions, text="Restore backup…", command=self.restore, style="Metal.TButton")
@@ -162,11 +148,6 @@ class InstallerView:
                         padding=round(6 * self.scale), arrowsize=round(12 * self.scale))
         style.map("TCombobox", fieldbackground=[("readonly", "#f1f3ea"), ("disabled", "#dce0d3")],
                   foreground=[("disabled", "#777e6d"), ("readonly", self.INK)])
-        style.configure("Patch.TRadiobutton", background=self.BG, font=(self.font, 10),
-                        foreground=self.INK, padding=(0, 2), focuscolor="#69725b",
-                        indicatorbackground="#eef1e4", indicatorforeground=self.INK)
-        style.map("Patch.TRadiobutton", background=[("active", self.BG)],
-                  foreground=[("disabled", "#777e6d")])
         style.configure("LCD.Horizontal.TProgressbar", background="#495938",
                         troughcolor="#a7b38a", bordercolor="#89976c", borderwidth=0,
                         lightcolor="#495938", darkcolor="#495938")
@@ -204,12 +185,11 @@ class InstallerView:
             self.choice.set("No iPod selected")
         if self.checked:
             state = self.checked["state"]
-            self.compatibility.configure(text="Compatible firmware" if state == "original" else state.upper() + " already installed")
-            self.display_detail.configure(text="Firmware checked / backup required before writing")
+            self.compatibility.configure(text="Compatible firmware" if state == "original" else "Memory fix already installed")
+            self.display_detail.configure(text="Firmware checked / backup required before writing" if state == "original"
+                                          else "Memory fix present / no installation needed")
         else:
             self.compatibility.configure(text="Checking…" if self.busy and self.action == "check" else "Not checked")
             self.display_detail.configure(text="1st & 2nd generation / Apple software 1.5")
-        target = self.version.get()
-        already = self.checked and (self.checked["state"] == target or
-                                    self.checked["state"] == "v2" and target == "v1")
+        already = self.checked and self.checked["state"] in ("v1", "v2")
         self.install_button.configure(text="Already up to date" if already else "Back up and install")
