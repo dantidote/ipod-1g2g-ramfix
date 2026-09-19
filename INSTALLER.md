@@ -42,7 +42,7 @@ See [Apple's port compatibility guidance](https://support.apple.com/en-us/109523
    Windows requests administrator access at launch. Mac requests administrator
    access when checking or changing the device.
 4. Choose **Find iPod**, select it by its displayed identity and capacity,
-   then choose **Check compatibility**. This reads firmware without writing it.
+   then choose **Check iPod**. This reads firmware without writing it.
 5. Choose **Back up and install** to apply the published **v1 memory-leak fix**.
    Select a folder on your computer and review the device before confirming.
    The app creates a new backup subfolder. There are no patch options to choose.
@@ -59,7 +59,7 @@ elsewhere, such as Documents, so cleanup cannot remove them. A crash or forced
 shutdown can leave the temporary runtime folder behind.
 
 The Mac app contains its supporting files inside the `.app` bundle. Instructions
-and runtime notices are included in both versions under **Help & licenses**.
+and runtime notices are included in both versions under **More → Help & licenses**.
 
 Only the firmware sectors containing the patch and its checksums are written.
 The partition table and music partition are not written. The app locks or
@@ -77,7 +77,7 @@ signing credentials.
 ## Restore, including after an interrupted write
 
 Keep `backup.json` and `firmware-before.bin` together. Open the app, find the
-same iPod, choose **Restore backup**, and select `backup.json`. A compatibility
+same iPod, choose **More → Restore backup**, and select `backup.json`. A compatibility
 check is not required for restoration, because a partial write may have left
 the firmware checksums invalid.
 

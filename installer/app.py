@@ -110,7 +110,7 @@ class App(InstallerView):
 
     def changed(self):
         self.checked = None
-        self.feedback("Check your iPod", "Choose Check compatibility before installing.")
+        self.feedback("Check your iPod", "Choose Check iPod to verify the firmware before installing.")
         self.refresh_buttons()
 
     def refresh_buttons(self):
@@ -178,7 +178,7 @@ class App(InstallerView):
             self.choice.set("")
             if self.devices:
                 self.choice.current(0)
-                self.feedback("iPod found", "Check compatibility to confirm its firmware before installing.", "success")
+                self.feedback("iPod found", "Choose Check iPod to verify the firmware before installing.", "success")
             else:
                 self.feedback("No iPod found", "Check the FireWire cable and power. On Mac, FireWire requires macOS Sequoia 15 or earlier.")
         self.start({"action": "scan"}, done, "Looking for supported iPods.")
@@ -304,10 +304,23 @@ def main():
         app.busy = True
         app.action = "install"
         app.refresh_buttons()
-        controls = [app.scan_button, app.check_button, app.install_button,
-                    app.restore_button, app.eject_button, app.choice]
+        controls = [app.scan_button, app.refresh_button, app.check_button, app.install_button,
+                    app.restore_button, app.eject_button, app.choice, app.more]
         if any(str(widget["state"]) != "disabled" for widget in controls):
             raise RuntimeError("Device controls remained active during an operation")
+        if any(app.more_menu.entrycget(i, "state") != "disabled" for i in (0, 1)):
+            raise RuntimeError("Recovery or eject remained available during an operation")
+        app.busy = False
+        app.checked = None
+        app.action = "install"
+        app.feedback("Installation verified", "Offline UI check", "success")
+        app.refresh_buttons()
+        if app.primary_button is not app.eject_button:
+            raise RuntimeError("Completed installation did not offer eject")
+        app.feedback("Operation stopped", "Offline UI check", "error")
+        app.refresh_buttons()
+        if app.primary_button is not app.check_button or app.more_menu.entrycget(0, "state") != "normal":
+            raise RuntimeError("Recovery was not available after a failed check")
         result["v1_only_and_busy_guards"] = "passed"
         root.destroy()
         if args.result:

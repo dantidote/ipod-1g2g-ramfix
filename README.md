@@ -13,8 +13,8 @@ An experimental desktop installer is available in this branch for **Windows x64,
 Windows is distributed as **one self-contained `.exe`**. Mac downloads contain
 one `.app` bundle. Help and license notices are embedded; no separate support
 folder needs to be kept alongside the download.
-The compact, early-iPod-style interface uses a monochrome status display and
-conventional desktop controls for checking, installing, and verifying firmware.
+The compact interface uses system controls and one main action at a time:
+find the iPod, check it, install, then eject. Restore and help are in **More**.
 The app installs v1 only; there is no patch selector.
 
 This preview accepts recognizable **first/second-generation FireWire iPods with a Windows-formatted MBR/FAT32 disk**. Mac-formatted Apple Partition Map disks and other firmware are refused. Its new general device workflows still need end-to-end hardware validation; the successful physical trial below used the earlier device-specific Windows writer. Build artifacts are unsigned previews, not a stable installer release. The existing `v1.0.0-alpha.1` release remains the file-only source package.
