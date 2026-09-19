@@ -31,6 +31,13 @@ This preview accepts recognizable **first/second-generation FireWire iPods with 
 
 This is an experimental release for an exact firmware image. It does not establish universal model compatibility, a supported song-count limit, or a fix for startup/shuffle speed.
 
+**Do older firmware releases need this fix?** The ten older images examined
+(1.0, 1.0.2, 1.0.4, 1.1, 1.2, 1.2.1, 1.2.2, 1.2.6, 1.3, and 1.4) clean up these
+allocations correctly. The leak appears with the separate-buffer design in 1.5.
+Do not apply this patch to older versions. Version 1.0.3 was not available to test;
+this finding is specific to the recorded images and this leak, not a guarantee
+of large-library support. See the [comparison and reproducible test](RESEARCH.md#earlier-firmware-comparison--september-19-2026).
+
 ## Requirements
 
 - Python 3.8 or later. The patcher uses the standard library only.

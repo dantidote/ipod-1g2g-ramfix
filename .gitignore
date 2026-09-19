@@ -8,6 +8,9 @@
 !/LICENSE
 !/patch_firmware.py
 !/test_firmware.py
+!/audit_firmware_versions.py
+!/firmware-audit-profiles.json
+!/firmware-audit-results.json
 !/test-results.json
 !/SHA256SUMS
 !/INSTALLER.md

@@ -42,3 +42,74 @@ Copies inspected in these paths allocate distinct backing storage. The separate 
 Every retained string is checked byte-for-byte. Further tests exercise repeated 20,000-string pools, shared-string reference counts and compaction, both growth-allocation failure paths, register/stack preservation, independent copies, and cleanup. Observation hooks compare native live allocations with the native heap counter and reject invalid/double frees in exercised paths. Nearly whole-heap allocations after cleanup check that freed blocks coalesce.
 
 The generated firmware hash matches the earlier build used in the physical trial. One owner subsequently reported that their 13,000-song library could be browsed, played, shuffled, and reshuffled. Startup and full-library shuffle remained slow. There are no measured hardware RAM figures or startup timings, and no claim of long-term stability or support for every first/second-generation unit.
+
+## Earlier firmware comparison — September 19, 2026
+
+The ten older images examined do **not** have this particular handle-growth leak.
+Their constructor makes one allocation containing an eight-byte header followed
+by its data; the data pointer is `handle + 8`. Freeing the handle therefore frees
+both header and data. The 1.5 constructor instead allocates a handle and a separate
+data buffer, while its disposer still frees only the handle. This explains why
+the same-looking disposal routine is correct in the older releases and leaks
+in 1.5. The representation change is observed in the binaries; Apple's reason
+for changing it is unknown.
+
+| Firmware image | OSOS disposer offset | Allocation layout | Live allocations after cleanup |
+|---|---:|---|---:|
+| 1.0 | `0x31d80` | One contiguous block | 0 |
+| 1.0.2 | `0x31d80` | One contiguous block | 0 |
+| 1.0.4 | `0x31d80` | One contiguous block | 0 |
+| 1.1 | `0x2dd88` | One contiguous block | 0 |
+| 1.2 | `0x34088` | One contiguous block | 0 |
+| 1.2.1 | `0x340a0` | One contiguous block | 0 |
+| 1.2.2 | `0x340b4` | One contiguous block | 0 |
+| 1.2.6 | `0x34110` | One contiguous block | 0 |
+| 1.3 | `0x34728` | One contiguous block | 0 |
+| 1.4 | `0x34728` | One contiguous block | 0 |
+| 1.5, stock | `0x34c98` | Separate handle and data | 27 |
+| 1.5, RAM fix v1 | `0x34c98` | Separate handle and data | 0 |
+
+These results use three growth/cleanup cycles with nine growth steps per cycle.
+Stock 1.5 leaves 27 data allocations holding 148,527 requested bytes. All ten
+older images and patched 1.5 return to zero live allocations. The test checks
+every retained byte, null disposal, each constructor allocation-failure path,
+callee-saved registers, stack balance, and invalid/double frees.
+
+The comparison executes each image's actual ARM constructor, growth, copy, and
+disposal routines. Native copy helpers are relocated using that image's own
+startup table. Only the underlying heap allocation/free calls are replaced with
+strict tracking callbacks. Thus these figures describe ownership and requested
+storage, **not** native heap overhead, a full firmware boot, or a song-count
+capacity test. The earlier native-heap title-pool tests above remain separate.
+
+The eleven input images were checked against the
+[flashpod firmware catalog](https://github.com/davidbarnhart/flashpod/blob/main/flashpod/firmware/firmware.json).
+Exact container and OSOS hashes are recorded in
+[`firmware-audit-profiles.json`](firmware-audit-profiles.json); results are in
+[`firmware-audit-results.json`](firmware-audit-results.json). The catalog uses
+`0.0`, `0.2`, and `0.4` for the images labeled 1.0, 1.0.2, and 1.0.4 here, and
+those early containers are repacks. The conclusions apply to the recorded OSOS
+payloads. **1.0.3 was not examined because an image was unavailable in this
+corpus.** This is not a claim to have examined every historical build or variant.
+
+Do not apply the 1.5 patch to these older images. Their data pointer points inside
+the handle's allocation, so separately freeing it would be invalid; the 1.5
+replacement's branch targets also do not match their routine layout. The
+installer's 1.5 hash restrictions remain intentional. These results do not show
+that older firmware supports any particular large-library size or is free from
+other memory limits.
+
+### Reproduce the comparison
+
+Install `unicorn==2.1.4`, then supply your own matching raw or gzip firmware files:
+
+```sh
+python audit_firmware_versions.py firmware-1.4.bin.gz firmware-1.5.bin.gz --json audit.json
+```
+
+Pass additional filenames to test more versions. The script rejects unknown
+container hashes, does not download firmware, does not access devices, and does
+not write firmware. For the supported stock 1.5 input it also tests the existing
+v1 patch in emulator memory. The JSON output refuses to overwrite an existing
+file. No Apple firmware or original routine bytes are included in the audit
+script, profiles, or results.
