@@ -29,7 +29,8 @@ class InstallerView:
         page.grid(row=0, column=0, sticky="nsew")
         page.columnconfigure(0, weight=1)
         self.label(page, "iPod RAM Fix", 17, True).grid(row=0, column=0, sticky="w")
-        self.label(page, "Memory leak fix for 1st- and 2nd-generation iPods.", 10,
+        self.label(page, "For 8,000+ song libraries on 1st- and 2nd-generation iPods.\n"
+                   "Fixes a memory leak that can make large libraries freeze.", 10,
                    color=self.muted).grid(row=1, column=0, sticky="w", pady=(px(5), px(18)))
         self.label(page, "iPod", 10, True).grid(row=2, column=0, sticky="w", pady=(0, px(7)))
         device_row = tk.Frame(page, bg=self.bg)
