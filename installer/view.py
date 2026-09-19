@@ -1,214 +1,214 @@
-"""The installer's presentation. Device access stays in the worker."""
+"""A compact, early-iPod utility with a functional monochrome display."""
 import sys
 
 from . import VERSION
 
 
 class InstallerView:
-    BG = "#f1f3f6"
-    INK = "#182637"
-    MUTED = "#596879"
-    BLUE = "#245edb"
-    LINE = "#dce2ea"
+    BG = "#d8d9d5"
+    INK = "#262922"
+    MUTED = "#5c6057"
+    LCD = "#bbc59d"
+    LCD_INK = "#29351d"
 
     def build_interface(self):
         tk, ttk, root = self.tk, self.ttk, self.root
-        family = "Helvetica Neue" if sys.platform == "darwin" else "Segoe UI"
-        self.font = family
+        self.font = "Lucida Grande" if sys.platform == "darwin" else "Tahoma"
+        self.mono = "Monaco" if sys.platform == "darwin" else "Lucida Console"
         self.scale = max(1.0, root.winfo_fpixels("1i") / 96)
-        px = lambda value: round(value * self.scale)
+        px = lambda n: round(n * self.scale)
         root.title("iPod RAM Fix")
+        root.geometry("%dx%d" % (px(780), px(650)))
+        root.minsize(px(740), px(620))
         root.configure(background=self.BG)
-        root.geometry("%dx%d" % (px(940), px(740)))
-        root.minsize(px(860), px(700))
-        root.option_add("*Font", (family, 10))
-        style = ttk.Style(root)
-        style.theme_use("clam")
-        style.configure("TButton", font=(family, 10), padding=(12, 6),
-                        background="#ffffff", foreground=self.INK,
-                        bordercolor=self.LINE, lightcolor="#ffffff", darkcolor="#ffffff")
-        style.map("TButton", background=[("active", "#edf2fa"), ("disabled", "#f4f5f7")],
-                  foreground=[("disabled", "#8c97a5")])
-        style.configure("Primary.TButton", font=(family, 11, "bold"), padding=(18, 9),
-                        background=self.BLUE, foreground="white", bordercolor=self.BLUE,
-                        lightcolor=self.BLUE, darkcolor=self.BLUE)
-        style.map("Primary.TButton", background=[("disabled", "#dce5f6"), ("active", "#194cb9")],
-                  foreground=[("disabled", "#778ba9"), ("!disabled", "white")],
-                  bordercolor=[("disabled", "#dce5f6")])
-        style.configure("Link.TButton", background=self.BG, borderwidth=0,
-                        bordercolor=self.BG, lightcolor=self.BG, darkcolor=self.BG,
-                        padding=(8, 6), foreground=self.MUTED)
-        style.configure("TCombobox", padding=7, fieldbackground="white", background="#edf2fa",
-                        bordercolor=self.LINE, arrowsize=13)
-        style.map("TCombobox", fieldbackground=[("readonly", "white"), ("disabled", "#f4f5f7")],
-                  foreground=[("readonly", self.INK), ("disabled", "#8c97a5")])
-        style.configure("Patch.TRadiobutton", background="white", foreground=self.INK,
-                        font=(family, 11, "bold"), padding=(0, 3))
-        style.map("Patch.TRadiobutton", background=[("active", "white")],
-                  foreground=[("disabled", "#8c97a5")])
-        style.configure("Fix.Horizontal.TProgressbar", background=self.BLUE,
-                        troughcolor="#e7ecf3", borderwidth=0, thickness=4)
+        root.option_add("*Font", (self.font, 10))
+        self.make_styles()
         root.columnconfigure(0, weight=1)
-        root.rowconfigure(1, weight=1)
+        root.rowconfigure(2, weight=1)
 
-        header = tk.Frame(root, bg=self.BG)
-        header.grid(row=0, column=0, sticky="ew", padx=26, pady=(20, 17))
-        self.label(header, "iPod RAM Fix", size=17, bold=True).pack(side="left")
-        self.label(header, "PREVIEW  /  " + VERSION, size=9, color=self.MUTED).pack(side="right")
+        # A faint satin finish lives behind real controls, never a screenshot.
+        surface = tk.Canvas(root, background=self.BG, highlightthickness=0)
+        surface.place(x=0, y=0, relwidth=1, relheight=1)
+        def shade(event):
+            surface.delete("grain")
+            for y in range(0, event.height, 2):
+                value = 224 - round(14 * y / max(1, event.height)) + (y % 6 == 0)
+                color = "#%02x%02x%02x" % (value, value + 1, value - 2)
+                surface.create_line(0, y, event.width, y, fill=color, tags="grain")
+        surface.bind("<Configure>", shade)
 
-        body = tk.Frame(root, bg=self.BG)
-        body.grid(row=1, column=0, sticky="nsew", padx=26)
-        body.columnconfigure(1, weight=1)
-        body.rowconfigure(0, weight=1)
-        sidebar = tk.Frame(body, bg="#e7edf4", width=px(222))
-        sidebar.grid(row=0, column=0, sticky="ns", padx=(0, 22))
-        sidebar.pack_propagate(False)
-        drawing = tk.Canvas(sidebar, width=px(218), height=px(220), bg="#e7edf4", highlightthickness=0)
-        drawing.pack(pady=(14, 0))
-        self.draw_ipod(drawing)
-        drawing.scale("all", 0, 0, .84, .84)
-        drawing.move("all", 17, 0)
-        drawing.scale("all", 0, 0, self.scale, self.scale)
-        self.label(sidebar, "More music.\nSame iPod.", size=20, bold=True).pack(anchor="w", padx=22)
-        self.label(sidebar, "Give your library more room\nto grow with the RAM fix.",
-                   color=self.MUTED, size=10).pack(anchor="w", padx=22, pady=(8, 14))
-        self.label(sidebar, "MADE FOR", size=8, bold=True, color=self.MUTED).pack(anchor="w", padx=22)
-        self.label(sidebar, "1st & 2nd generation\nApple software 1.5\nWindows-formatted iPods",
-                   size=10).pack(anchor="w", padx=22, pady=(6, 10))
+        bezel = tk.Frame(root, bg="#92968a", relief="sunken", borderwidth=3)
+        bezel.grid(row=0, column=0, sticky="ew", padx=px(20), pady=(px(20), px(17)))
+        screen = tk.Frame(bezel, bg=self.LCD, padx=px(16), pady=px(13),
+                          highlightthickness=1, highlightbackground="#6f795c")
+        screen.pack(fill="both", expand=True)
+        screen.columnconfigure(1, weight=1)
+        icon = tk.Canvas(screen, bg=self.LCD, width=px(61), height=px(95), highlightthickness=0)
+        icon.grid(row=0, column=0, rowspan=3, sticky="n", padx=(0, px(19)), pady=px(4))
+        self.draw_ipod(icon)
+        icon.scale("all", 0, 0, self.scale, self.scale)
+        self.label(screen, "iPod RAM Fix", size=17, bold=True, mono=True, color=self.LCD_INK).grid(
+            row=0, column=1, sticky="w", pady=(0, px(8)))
+        self.status_heading = self.label(screen, "Connect your iPod", size=14, bold=True,
+                                          mono=True, color=self.LCD_INK)
+        self.status_heading.grid(row=1, column=1, sticky="w")
+        self.status = tk.StringVar(value="Connect with FireWire, then find your device.")
+        self.status_label = tk.Label(screen, textvariable=self.status, bg=self.LCD, fg=self.LCD_INK,
+                                    font=(self.mono, 9), justify="left", anchor="nw", height=4)
+        self.status_label.grid(row=2, column=1, sticky="ew", pady=(px(6), 0))
+        screen.bind("<Configure>", lambda e: self.status_label.configure(wraplength=max(px(200), e.width - px(119))))
+        tk.Frame(screen, bg="#87916b", height=1).grid(row=3, column=0, columnspan=2, sticky="ew", pady=(px(6), px(7)))
+        self.display_detail = self.label(screen, "1st & 2nd generation / Apple software 1.5",
+                                          size=8, mono=True, color=self.LCD_INK)
+        self.display_detail.grid(row=4, column=0, columnspan=2, sticky="w")
+        track = tk.Frame(screen, bg="#a7b38a", height=px(7))
+        track.grid(row=5, column=0, columnspan=2, sticky="ew", pady=(px(8), 0))
+        track.pack_propagate(False)
+        self.progress = ttk.Progressbar(track, mode="determinate", style="LCD.Horizontal.TProgressbar")
+        self.progress.pack(fill="both", expand=True)
 
-        content = tk.Frame(body, bg=self.BG)
-        content.grid(row=0, column=1, sticky="nsew")
-        content.columnconfigure(0, weight=1)
-        steps = tk.Frame(content, bg=self.BG)
-        steps.grid(row=0, column=0, sticky="ew", pady=(0, 12))
-        self.steps = []
-        for i, title in enumerate(("CONNECT", "CHECK", "INSTALL")):
-            steps.columnconfigure(i, weight=1)
-            item = self.label(steps, "%02d  %s" % (i + 1, title), size=9, bold=True)
-            item.grid(row=0, column=i, sticky="w")
-            self.steps.append(item)
-
-        connection = self.card(content)
-        connection.grid(row=1, column=0, sticky="ew")
-        connection.columnconfigure(0, weight=1)
-        self.label(connection, "YOUR IPOD", size=8, bold=True, color=self.MUTED).grid(
-            row=0, column=0, sticky="w")
-        self.device_title = self.label(connection, "Connect with FireWire", size=15, bold=True)
-        self.device_title.grid(row=1, column=0, sticky="w", pady=(3, 6))
-        self.scan_button = ttk.Button(connection, text="Find my iPod", command=self.scan)
-        self.scan_button.grid(row=0, column=1, rowspan=2, padx=(12, 0))
-        self.choice = ttk.Combobox(connection, state="readonly", width=25)
-        self.choice.grid(row=2, column=0, columnspan=2, sticky="ew", pady=(4, 10))
+        device = self.section(root, " Device ")
+        device.grid(row=1, column=0, sticky="ew", padx=px(20), pady=(0, px(13)))
+        device.columnconfigure(0, weight=1)
+        self.choice = ttk.Combobox(device, state="readonly", width=28)
+        self.choice.grid(row=0, column=0, sticky="ew", padx=(0, px(12)), pady=(0, px(9)))
         self.choice.bind("<<ComboboxSelected>>", lambda event: self.changed())
-        self.check_button = ttk.Button(connection, text="Check compatibility", command=self.check)
-        self.check_button.grid(row=3, column=0, sticky="w")
-        self.compatibility = self.label(connection, "Not checked", size=9, color=self.MUTED)
-        self.compatibility.grid(row=3, column=1, sticky="e", padx=(10, 0))
+        self.scan_button = ttk.Button(device, text="Find iPod", command=self.scan, style="Metal.TButton")
+        self.scan_button.grid(row=0, column=1, sticky="ew", pady=(0, px(9)))
+        check_row = tk.Frame(device, bg=self.BG)
+        check_row.grid(row=1, column=0, columnspan=2, sticky="ew")
+        self.check_button = ttk.Button(check_row, text="Check compatibility", command=self.check, style="Metal.TButton")
+        self.check_button.pack(side="left")
+        self.compatibility = self.label(check_row, "Not checked", size=9, color=self.MUTED)
+        self.compatibility.pack(side="left", padx=px(12))
 
-        patches = self.card(content)
-        patches.grid(row=2, column=0, sticky="ew", pady=(12, 0))
+        patches = self.section(root, " Patch ")
+        patches.grid(row=2, column=0, sticky="nsew", padx=px(20), pady=(0, px(15)))
         patches.columnconfigure(0, weight=1)
-        self.label(patches, "CHOOSE YOUR PATCH", size=8, bold=True, color=self.MUTED).grid(
-            row=0, column=0, sticky="w", pady=(0, 7))
         self.version = tk.StringVar(value="v1")
         self.patch_buttons = []
-        options = (("v1", "Memory fix", "RECOMMENDED", "Fixes the library memory leak. Published v1 patch."),
-                   ("v2", "Memory fix + larger buffers", "EXPERIMENTAL", "Adds v2 changes. Faster startup is not guaranteed."))
-        for i, (value, title, badge, detail) in enumerate(options):
-            line = tk.Frame(patches, bg="white")
-            line.grid(row=1 + i * 2, column=0, sticky="ew", pady=(5 if i else 0, 0))
-            button = ttk.Radiobutton(line, text=title, value=value, variable=self.version,
-                                     style="Patch.TRadiobutton", command=self.refresh_buttons)
-            button.pack(side="left")
+        options = (("v1", "Memory leak fix", "Published v1 patch. Recommended."),
+                   ("v2", "Memory fix + larger buffers", "Experimental v2 patch. Faster startup is not guaranteed."))
+        for i, (value, title, detail) in enumerate(options):
+            button = ttk.Radiobutton(patches, text=title, value=value, variable=self.version,
+                                     command=self.refresh_buttons, style="Patch.TRadiobutton")
+            button.grid(row=i * 2, column=0, sticky="w", pady=(px(9) if i else 0, 0))
             self.patch_buttons.append(button)
-            self.label(line, badge, size=7, bold=True,
-                       color="#416649" if i == 0 else "#87662a").pack(side="right", padx=(8, 0))
             self.label(patches, detail, size=9, color=self.MUTED).grid(
-                row=2 + i * 2, column=0, sticky="w", padx=(23, 0), pady=(0, 7))
-        content.rowconfigure(3, weight=1)
-        action = tk.Frame(content, bg=self.BG)
-        action.grid(row=4, column=0, sticky="ew", pady=(14, 0))
-        self.install_button = ttk.Button(action, text="Back up and install", style="Primary.TButton",
-                                         command=self.install)
-        self.install_button.pack(fill="x")
-        self.label(action, "Your firmware is backed up and every write is verified.", size=9,
-                   color=self.MUTED).pack(pady=(7, 0))
+                row=i * 2 + 1, column=0, sticky="w", padx=(px(24), 0), pady=(px(3), px(2)))
 
-        footer = tk.Frame(root, bg=self.BG)
-        footer.grid(row=2, column=0, sticky="ew", padx=26, pady=(18, 16))
-        footer.columnconfigure(0, weight=1)
-        status_panel = self.card(footer, padding=12)
-        status_panel.grid(row=0, column=0, sticky="ew")
-        self.status_heading = self.label(status_panel, "Ready when you are", size=11, bold=True)
-        self.status_heading.pack(anchor="w")
-        self.status = tk.StringVar(value="Connect with FireWire and close iTunes or Music, then choose Find my iPod.")
-        self.status_label = tk.Label(status_panel, textvariable=self.status, bg="white", fg=self.MUTED,
-                                    font=(family, 9), anchor="w", justify="left", wraplength=820)
-        self.status_label.pack(fill="x", pady=(3, 8))
-        status_panel.bind("<Configure>", lambda event: self.status_label.configure(wraplength=max(200, event.width - 28)))
-        progress_track = tk.Frame(status_panel, bg="#e7ecf3", height=4)
-        progress_track.pack(fill="x")
-        progress_track.pack_propagate(False)
-        self.progress = ttk.Progressbar(progress_track, mode="determinate", style="Fix.Horizontal.TProgressbar")
-        self.progress.pack(fill="both", expand=True)
-        links = tk.Frame(footer, bg=self.BG)
-        links.grid(row=1, column=0, sticky="ew", pady=(7, 0))
-        self.restore_button = ttk.Button(links, text="Restore backup…", command=self.restore, style="Link.TButton")
-        self.restore_button.pack(side="left")
-        self.eject_button = ttk.Button(links, text="Eject iPod", command=self.eject, style="Link.TButton")
-        self.eject_button.pack(side="left", padx=(8, 0))
-        ttk.Button(links, text="Help & licenses", command=self.about, style="Link.TButton").pack(side="right")
+        bottom = tk.Frame(root, bg=self.BG)
+        bottom.grid(row=3, column=0, sticky="ew", padx=px(20), pady=(0, px(13)))
+        tk.Frame(bottom, bg="#a4a69e", height=1).pack(fill="x")
+        tk.Frame(bottom, bg="#f6f6f3", height=1).pack(fill="x")
+        actions = tk.Frame(bottom, bg=self.BG)
+        actions.pack(fill="x", pady=(px(15), px(10)))
+        self.eject_button = ttk.Button(actions, text="Eject iPod", command=self.eject, style="Metal.TButton")
+        self.eject_button.pack(side="left")
+        self.restore_button = ttk.Button(actions, text="Restore backup…", command=self.restore, style="Metal.TButton")
+        self.restore_button.pack(side="left", padx=px(10))
+        self.install_button = ttk.Button(actions, text="Back up and install", command=self.install,
+                                         style="Graphite.TButton")
+        self.install_button.pack(side="right")
+        footer = tk.Frame(bottom, bg=self.BG)
+        footer.pack(fill="x")
+        self.label(footer, "Preview  /  " + VERSION, size=8, color=self.MUTED).pack(side="left")
+        ttk.Button(footer, text="Help & licenses", command=self.about, style="Quiet.TButton").pack(side="right")
 
-    def label(self, parent, text, size=10, bold=False, color=None):
+    def label(self, parent, text, size=10, bold=False, color=None, mono=False):
         return self.tk.Label(parent, text=text, bg=parent.cget("background"), fg=color or self.INK,
-                             font=(self.font, size, "bold" if bold else "normal"),
+                             font=(self.mono if mono else self.font, size, "bold" if bold else "normal"),
                              justify="left", anchor="w", borderwidth=0)
 
-    def card(self, parent, padding=14):
-        return self.tk.Frame(parent, bg="white", padx=padding, pady=padding,
-                             highlightthickness=1, highlightbackground=self.LINE)
+    def section(self, parent, text):
+        return self.tk.LabelFrame(parent, text=text, bg=self.BG, fg=self.INK,
+                                  font=(self.font, 10, "bold"), relief="groove", borderwidth=2,
+                                  padx=round(12 * self.scale), pady=round(10 * self.scale))
+
+    def make_styles(self):
+        style = self.ttk.Style(self.root)
+        style.theme_use("clam")
+        style.configure(".", background=self.BG, foreground=self.INK, font=(self.font, 10))
+        self._button_images = []
+        for name, colors in (
+            ("Metal", ("#fbfbf8", "#bfc1ba", "#868b80")),
+            ("Graphite", ("#686d62", "#353b30", "#23291f")),
+        ):
+            normal = self.button_image(*colors)
+            active = self.button_image("#eef2e5" if name == "Metal" else "#7b836f",
+                                       "#c5ccb9" if name == "Metal" else "#434c37", "#69715e")
+            pressed = self.button_image("#a8afa0" if name == "Metal" else "#303629",
+                                        "#d4d9cb" if name == "Metal" else "#505a43", "#5c6452")
+            disabled = self.button_image("#e4e5df", "#cdd0c6", "#a9ada0")
+            self._button_images.extend((normal, active, pressed, disabled))
+            style.element_create(name + ".button", "image", normal,
+                                 ("disabled", disabled), ("pressed", pressed), ("active", active),
+                                 border=4, sticky="nsew")
+            style.layout(name + ".TButton", [(name + ".button", {
+                "sticky": "nsew", "children": [("Button.focus", {
+                    "sticky": "nsew", "children": [("Button.padding", {
+                        "sticky": "nsew", "children": [("Button.label", {"sticky": "nsew"})]})]})]})])
+            style.configure(name + ".TButton", font=(self.font, 10, "bold" if name == "Graphite" else "normal"),
+                            padding=(round(17 * self.scale), round(7 * self.scale)),
+                            foreground="#ffffff" if name == "Graphite" else self.INK,
+                            focuscolor="#e6eadf" if name == "Graphite" else "#626957")
+            style.map(name + ".TButton", foreground=[("disabled", "#777e6d")])
+        style.configure("Quiet.TButton", background=self.BG, foreground=self.MUTED,
+                        font=(self.font, 9), padding=(3, 2), borderwidth=0,
+                        bordercolor=self.BG, lightcolor=self.BG, darkcolor=self.BG)
+        style.map("Quiet.TButton", background=[("active", "#e6e8de")])
+        style.configure("TCombobox", fieldbackground="#f1f3ea", background="#d4d8cb",
+                        foreground=self.INK, bordercolor="#92998a", arrowcolor=self.INK,
+                        padding=round(6 * self.scale), arrowsize=round(12 * self.scale))
+        style.map("TCombobox", fieldbackground=[("readonly", "#f1f3ea"), ("disabled", "#dce0d3")],
+                  foreground=[("disabled", "#777e6d"), ("readonly", self.INK)])
+        style.configure("Patch.TRadiobutton", background=self.BG, font=(self.font, 10),
+                        foreground=self.INK, padding=(0, 2), focuscolor="#69725b",
+                        indicatorbackground="#eef1e4", indicatorforeground=self.INK)
+        style.map("Patch.TRadiobutton", background=[("active", self.BG)],
+                  foreground=[("disabled", "#777e6d")])
+        style.configure("LCD.Horizontal.TProgressbar", background="#495938",
+                        troughcolor="#a7b38a", bordercolor="#89976c", borderwidth=0,
+                        lightcolor="#495938", darkcolor="#495938")
+
+    def button_image(self, top, bottom, border):
+        # Small nine-slice skins give native ttk buttons a tactile bevel.
+        width, height = 24, 32
+        image = self.tk.PhotoImage(master=self.root, width=width, height=height)
+        a = tuple(int(top[i:i + 2], 16) for i in (1, 3, 5))
+        b = tuple(int(bottom[i:i + 2], 16) for i in (1, 3, 5))
+        for y in range(height):
+            inset = 3 if y in (0, height - 1) else (1 if y in (1, height - 2) else 0)
+            fill = "#%02x%02x%02x" % tuple(round(a[i] + (b[i] - a[i]) * y / (height - 1)) for i in range(3))
+            image.put(border, to=(inset, y, width - inset, y + 1))
+            if 0 < y < height - 1:
+                image.put(fill, to=(inset + 1, y, width - inset - 1, y + 1))
+        image.put(top, to=(3, 1, width - 3, 2))
+        return image
 
     def draw_ipod(self, canvas):
-        # Vector artwork keeps the app sharp without shipping image dependencies.
-        def rounded(x1, y1, x2, y2, radius, fill, outline):
-            points = [x1 + radius, y1, x2 - radius, y1, x2, y1, x2, y1 + radius,
-                      x2, y2 - radius, x2, y2, x2 - radius, y2, x1 + radius, y2,
-                      x1, y2, x1, y2 - radius, x1, y1 + radius, x1, y1]
-            canvas.create_polygon(points, smooth=True, splinesteps=24, fill=fill, outline=outline, width=1)
-        rounded(49, 15, 181, 253, 17, "#d6dee8", "#d6dee8")
-        rounded(43, 9, 175, 247, 17, "#fbfcfe", "#c7d1dd")
-        rounded(55, 29, 163, 115, 6, "#8c9a86", "#9eab98")
-        canvas.create_rectangle(60, 34, 158, 110, fill="#c5d2b2", outline="")
-        canvas.create_text(109, 46, text="iPod", font=(self.font, 10, "bold"), fill="#354932")
-        canvas.create_line(63, 56, 154, 56, fill="#778b65")
-        canvas.create_rectangle(63, 62, 155, 79, fill="#536c46", outline="")
-        canvas.create_text(68, 70, text="Music", anchor="w", font=(self.font, 9, "bold"), fill="#eff7de")
-        canvas.create_text(151, 70, text=">", anchor="e", font=(self.font, 10), fill="#eff7de")
-        canvas.create_text(68, 91, text="Settings", anchor="w", font=(self.font, 9), fill="#354932")
-        canvas.create_oval(63, 140, 155, 232, fill="#eef1f5", outline="#d9e0e8")
-        canvas.create_oval(82, 159, 136, 213, fill="#fcfdff", outline="#d9e0e8")
-        canvas.create_text(109, 132, text="MENU", font=(self.font, 7, "bold"), fill="#8b97a7")
-        canvas.create_text(54, 184, text="‹", font=(self.font, 15, "bold"), fill="#8b97a7")
-        canvas.create_text(165, 184, text="›", font=(self.font, 15, "bold"), fill="#8b97a7")
-        canvas.create_text(109, 239, text="▶ Ⅱ", font=(self.font, 7), fill="#8b97a7")
+        c = self.LCD_INK
+        # The original player's silhouette, drawn as an LCD-sized line glyph.
+        canvas.create_polygon(15, 2, 46, 2, 53, 9, 53, 84, 46, 91, 15, 91, 8, 84, 8, 9,
+                              fill="", outline=c, width=3)
+        canvas.create_rectangle(15, 12, 46, 38, fill=c, outline=c)
+        canvas.create_oval(15, 47, 46, 78, fill=c, outline=c)
+        canvas.create_oval(25, 57, 36, 68, fill=self.LCD, outline=self.LCD)
 
     def feedback(self, title, message, kind="info"):
-        colors = {"info": self.INK, "busy": self.BLUE, "success": "#2f6b49", "error": "#a83c35"}
-        self.status_heading.configure(text=title, fg=colors[kind])
+        self.status_heading.configure(text=title, fg=self.LCD_INK)
         self.status.set(message)
 
     def update_view(self, device):
-        active = 0 if not device else (1 if not self.checked else 2)
-        for i, label in enumerate(self.steps):
-            label.configure(fg=self.BLUE if i == active else ("#477558" if i < active else "#8994a3"))
-        self.device_title.configure(text="Your iPod is connected" if device else "Connect with FireWire")
+        if not device and not self.choice.get():
+            self.choice.set("No iPod selected")
         if self.checked:
             state = self.checked["state"]
-            label = "Compatible" if state == "original" else state.upper() + " installed"
-            self.compatibility.configure(text=label, fg="#2f6b49")
+            self.compatibility.configure(text="Compatible firmware" if state == "original" else state.upper() + " already installed")
+            self.display_detail.configure(text="Firmware checked / backup required before writing")
         else:
-            self.compatibility.configure(text="Checking…" if self.busy and self.action == "check" else "Not checked",
-                                         fg=self.MUTED)
+            self.compatibility.configure(text="Checking…" if self.busy and self.action == "check" else "Not checked")
+            self.display_detail.configure(text="1st & 2nd generation / Apple software 1.5")
         target = self.version.get()
         already = self.checked and (self.checked["state"] == target or
                                     self.checked["state"] == "v2" and target == "v1")
