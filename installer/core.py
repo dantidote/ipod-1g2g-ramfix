@@ -10,6 +10,8 @@ import struct
 from dataclasses import dataclass
 from pathlib import Path
 
+from . import STOCK_FIRMWARE_REQUIREMENT
+
 SECTOR = 512
 MAX_PREFIX = 64 * 1024 * 1024
 OSOS_OFFSET, OSOS_SIZE = 0x4400, 0x315AA8
@@ -26,14 +28,19 @@ def require(ok, message):
         raise ValueError(message)
 
 
+def require_firmware(ok, detail):
+    require(ok, STOCK_FIRMWARE_REQUIREMENT +
+            " Modified firmware and custom bootloaders are not supported.\n\n" + detail)
+
+
 def sha(data):
     return hashlib.sha256(data).hexdigest()
 
 
 def state(payload):
     digest = sha(payload)
-    require(len(payload) == OSOS_SIZE and digest in HASHES.values(),
-            "Unsupported or modified firmware. Nothing will be written.")
+    require_firmware(len(payload) == OSOS_SIZE and digest in HASHES.values(),
+                     "Unsupported or modified firmware.")
     return next(name for name, value in HASHES.items() if value == digest)
 
 
@@ -102,11 +109,11 @@ def inspect(prefix, disk_size):
     part = layout(prefix[:SECTOR], disk_size)
     require(len(prefix) == part.data_start, "Incomplete firmware-region read")
     fw = part.firmware_start
-    require(prefix[fw:fw + 4] == b"{{~~" and
-            prefix[fw + 0x100:fw + 0x104] == b"]ih[" and
-            struct.unpack_from("<I", prefix, fw + 0x104)[0] == 0x4000 and
-            struct.unpack_from("<H", prefix, fw + 0x10A)[0] == 2,
-            "Unsupported firmware container")
+    require_firmware(prefix[fw:fw + 4] == b"{{~~" and
+                     prefix[fw + 0x100:fw + 0x104] == b"]ih[" and
+                     struct.unpack_from("<I", prefix, fw + 0x104)[0] == 0x4000 and
+                     struct.unpack_from("<H", prefix, fw + 0x10A)[0] == 2,
+                     "Unsupported firmware container")
     payload = prefix[fw + OSOS_OFFSET:fw + OSOS_OFFSET + OSOS_SIZE]
     version = state(payload)
     checksum = sum(payload) & 0xFFFFFFFF
@@ -114,15 +121,15 @@ def inspect(prefix, disk_size):
     # uses offsets relative to the firmware partition. Preserve both layouts.
     for directory, bias in ((0x4000, fw), (0x4200, 0)):
         entry = struct.unpack_from("<4s4s8I", prefix, fw + directory)
-        require(entry == (b"!ATA", b"soso", 0, bias + OSOS_OFFSET, OSOS_SIZE,
-                          0x28000000, 0, checksum, 0x130, 0xFFFFFFFF),
-                "Unrecognized installed firmware directory or checksum")
+        require_firmware(entry == (b"!ATA", b"soso", 0, bias + OSOS_OFFSET, OSOS_SIZE,
+                                   0x28000000, 0, checksum, 0x130, 0xFFFFFFFF),
+                         "Unrecognized installed firmware directory or checksum")
         aupd = struct.unpack_from("<4s4s8I", prefix, fw + directory + 40)
-        require(aupd[:6] == (b"!ATA", b"dpua", 1, bias + 0x31A000, 1816533, 0x28000000)
-                and aupd[6:] == (0, 266112895, 0x130, 0x28000000),
-                "Unsupported ROM-update directory")
-    require(sum(prefix[fw + 0x31A000:fw + 0x31A000 + 1816533]) & 0xFFFFFFFF == 266112895,
-            "ROM-update payload checksum mismatch")
+        require_firmware(aupd[:6] == (b"!ATA", b"dpua", 1, bias + 0x31A000, 1816533, 0x28000000)
+                         and aupd[6:] == (0, 266112895, 0x130, 0x28000000),
+                         "Unsupported ROM-update directory")
+    require_firmware(sum(prefix[fw + 0x31A000:fw + 0x31A000 + 1816533]) & 0xFFFFFFFF == 266112895,
+                     "ROM-update payload checksum mismatch")
     return part, version
 
 

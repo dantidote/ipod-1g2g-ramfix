@@ -1,6 +1,8 @@
 """Small native desktop utility; one main action per stage."""
 import sys
 
+from . import STOCK_FIRMWARE_REQUIREMENT
+
 
 class InstallerView:
     def build_interface(self):
@@ -21,8 +23,8 @@ class InstallerView:
         style.configure("TCombobox", font=(self.face, 10), padding=px(4))
         root.title("iPod RAM Fix")
         root.configure(background=self.bg)
-        root.geometry("%dx%d" % (px(580), px(420)))
-        root.minsize(px(540), px(420))
+        root.geometry("%dx%d" % (px(580), px(440)))
+        root.minsize(px(540), px(440))
         root.columnconfigure(0, weight=1)
         root.rowconfigure(0, weight=1)
         page = tk.Frame(root, bg=self.bg, padx=px(30), pady=px(20))
@@ -30,7 +32,7 @@ class InstallerView:
         page.columnconfigure(0, weight=1)
         self.label(page, "iPod RAM Fix", 17, True).grid(row=0, column=0, sticky="w")
         self.label(page, "For 8,000+ song libraries on 1st- and 2nd-generation iPods.\n"
-                   "Fixes a memory leak that can make large libraries freeze.", 10,
+                   "Fixes a memory leak in Apple's firmware that can freeze large libraries.", 10,
                    color=self.muted).grid(row=1, column=0, sticky="w", pady=(px(5), px(18)))
         self.label(page, "iPod", 10, True).grid(row=2, column=0, sticky="w", pady=(0, px(7)))
         device_row = tk.Frame(page, bg=self.bg)
@@ -41,7 +43,8 @@ class InstallerView:
         self.choice.bind("<<ComboboxSelected>>", lambda event: self.changed())
         self.refresh_button = ttk.Button(device_row, text="Refresh", command=self.scan)
         self.refresh_button.grid(row=0, column=1, padx=(px(8), 0))
-        self.compatibility = self.label(page, "Apple software 1.5 · Windows-formatted iPods", 9, color=self.muted)
+        self.compatibility = self.label(page, STOCK_FIRMWARE_REQUIREMENT +
+                                        "\nWindows-formatted iPods only.", 9, color=self.muted)
         self.compatibility.grid(row=4, column=0, sticky="w", pady=(px(7), px(16)))
         self.status_heading = self.label(page, "Connect your iPod", 11, True)
         self.status_heading.grid(row=5, column=0, sticky="w")
@@ -100,13 +103,7 @@ class InstallerView:
         self.more_menu.entryconfigure(0, state="normal" if device and not self.busy else "disabled")
         self.more_menu.entryconfigure(1, state="normal" if device and not self.busy else "disabled")
         self.more.configure(state="disabled" if self.busy else "normal")
-        if self.checked:
-            already = self.checked["state"] in ("v1", "v2")
-            self.compatibility.configure(text="Memory fix already installed" if already else "Compatible with the v1 memory fix")
-        else:
-            already = False
-            self.compatibility.configure(text="Checking compatibility…" if self.busy and self.action == "check"
-                                         else "Apple software 1.5 · Windows-formatted iPods")
+        already = self.checked and self.checked["state"] in ("v1", "v2")
         if self.busy:
             chosen = {"scan": self.scan_button, "check": self.check_button, "install": self.install_button,
                       "restore": self.restore_button, "eject": self.eject_button}.get(self.action, self.scan_button)

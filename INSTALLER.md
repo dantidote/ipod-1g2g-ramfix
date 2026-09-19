@@ -12,6 +12,14 @@ The native apps are unsigned and are not Apple-notarized.
 
 ## Supported devices
 
+**Requires stock Apple firmware 1.5. Rockbox does not need this fix.** The patch
+addresses a memory leak in Apple's firmware. Rockbox installations and other
+custom bootloaders are not supported, even if you can still boot into Apple's
+menus. Only return to unmodified Apple firmware if you intend to use and patch
+Apple's firmware. A failed firmware or checksum check can also mean a different
+firmware version or damaged firmware; it does not by itself prove that Rockbox
+is installed.
+
 - First- and second-generation FireWire iPods, with the exact supported Apple
   software 1.5 payload. Full hashes are checked before modification.
 - Windows-formatted **MBR/FAT32** disks with the installed firmware layout the

@@ -17,6 +17,10 @@ The compact interface uses system controls and one main action at a time:
 find the iPod, check it, install, then eject. Restore and help are in **More**.
 The app installs v1 only; there is no patch selector.
 
+**Requires stock Apple firmware 1.5. Rockbox does not need this fix.** The leak
+is in Apple's firmware. Rockbox installations and other custom bootloaders are
+not supported, including installations that can also boot Apple's firmware.
+
 This preview accepts recognizable **first/second-generation FireWire iPods with a Windows-formatted MBR/FAT32 disk**. Mac-formatted Apple Partition Map disks and other firmware are refused. Its new general device workflows still need end-to-end hardware validation; the successful physical trial below used the earlier device-specific Windows writer. Build artifacts are unsigned previews, not a stable installer release. The existing `v1.0.0-alpha.1` release remains the file-only source package.
 
 ## Results so far

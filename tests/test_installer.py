@@ -309,6 +309,26 @@ class ServiceTests(FixtureCase):
                 service.execute(self.request(folder))
             self.assertEqual(disk.writes, [])
 
+    def test_modified_firmware_reports_stock_requirement_without_writes(self):
+        # A changed directory must be refused even if the Apple payload still
+        # matches. This covers a custom bootloader changing the installed layout.
+        for offset in (63 * 512 + 0x420C, 63 * 512 + core.OSOS_OFFSET + 0x1000):
+            for action in ("check", "install"):
+                with self.subTest(offset=offset, action=action):
+                    changed = bytearray(self.before)
+                    changed[offset] ^= 1
+                    disk = MemoryDisk(bytes(changed))
+                    with tempfile.TemporaryDirectory() as folder, self.service_context(disk, folder):
+                        request = self.request(folder, action)
+                        request["checked_sha256"] = core.sha(changed)
+                        with self.assertRaises(ValueError) as caught:
+                            service.execute(request)
+                        self.assertIn("Requires stock Apple firmware 1.5", str(caught.exception))
+                        self.assertIn("Rockbox does not need this fix", str(caught.exception))
+                        self.assertIn("custom bootloaders are not supported", str(caught.exception))
+                        self.assertEqual(disk.writes, [])
+                        self.assertEqual(list(Path(folder).iterdir()), [])
+
     def test_service_changed_after_check_prevents_writes_and_backup(self):
         disk = MemoryDisk(self.after)
         with tempfile.TemporaryDirectory() as folder, self.service_context(disk, folder):
