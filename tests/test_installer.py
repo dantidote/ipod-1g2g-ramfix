@@ -286,6 +286,32 @@ class SelectionTests(unittest.TestCase):
 
 
 class NativeBoundaryTests(unittest.TestCase):
+    def test_mac_backup_checks_containing_volume_and_rejects_ipod(self):
+        with tempfile.TemporaryDirectory() as folder:
+            volume = Path(folder).resolve()
+            backup = volume / "Desktop" / "backup"
+            backup.mkdir(parents=True)
+            with patch.object(devices.sys, "platform", "darwin"), \
+                 patch.object(devices.os.path, "ismount", side_effect=lambda p: p == volume), \
+                 patch.object(devices, "mac_info", return_value={"ParentWholeDisk": "disk0"}) as info:
+                devices.backup_location(backup, {"id": "disk2"})
+                info.assert_called_once_with(str(volume))
+                info.return_value = {"ParentWholeDisk": "disk2"}
+                with self.assertRaisesRegex(ValueError, "not on the iPod"):
+                    devices.backup_location(backup, {"id": "disk2"})
+                info.return_value = {}
+                with self.assertRaises(ValueError):
+                    devices.backup_location(backup, {"id": "disk2"})
+
+    def test_diskutil_error_shows_message_without_xml(self):
+        import subprocess
+        response = subprocess.CompletedProcess([], 1, plistlib.dumps({
+            "Error": True, "ErrorMessage": "Could not find disk: example"}), b"")
+        with patch.object(devices.subprocess, "run", return_value=response):
+            with self.assertRaises(OSError) as caught:
+                devices.run(["diskutil"])
+            self.assertEqual(str(caught.exception), "Could not find disk: example")
+
     def test_backup_cannot_be_saved_in_launcher_cleanup_directory(self):
         with tempfile.TemporaryDirectory() as folder, \
              patch.dict(devices.os.environ, {"IPOD_RAMFIX_SESSION_DIR": folder}):

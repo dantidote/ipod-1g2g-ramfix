@@ -18,6 +18,12 @@ def run(args):
     result = subprocess.run(args, capture_output=True, timeout=90, **options)
     if result.returncode:
         detail = (result.stderr or result.stdout).decode("utf-8", "replace").strip()
+        try:
+            error = plistlib.loads(result.stdout)
+            if isinstance(error, dict) and isinstance(error.get("ErrorMessage"), str):
+                detail = error["ErrorMessage"]
+        except (ValueError, plistlib.InvalidFileException):
+            pass
         raise OSError(detail or "%s failed" % args[0])
     return result.stdout
 
@@ -186,7 +192,14 @@ def backup_location(folder, device):
         finally:
             k.CloseHandle(h)
     else:
-        info = mac_info(str(folder))
+        # High Sierra diskutil accepts a volume mount point, not arbitrary
+        # directories. Resolve links before locating the containing volume.
+        mount = Path(folder).resolve(strict=True)
+        require(mount.is_dir(), "Choose an existing backup folder")
+        while not os.path.ismount(mount):
+            require(mount.parent != mount, "Cannot identify the backup disk")
+            mount = mount.parent
+        info = mac_info(str(mount))
         require(info.get("ParentWholeDisk") and info["ParentWholeDisk"] != device["id"],
                 "Save the backup on your computer, not on the iPod")
 
