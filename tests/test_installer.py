@@ -1,6 +1,7 @@
 """Firmware-free safety tests. No native device API is called."""
 import contextlib
 import json
+import plistlib
 import struct
 import tempfile
 import unittest
@@ -217,6 +218,8 @@ class SelectionTests(unittest.TestCase):
                     DeviceBlockSize=512, Writable=True, MediaName="Apple iPod", TotalSize=100000000)
         guids = {"disk3": "fake-guid"}
         self.assertIsNotNone(devices.mac_candidate(info, guids, {"disk0"}))
+        self.assertEqual(devices.mac_candidate(dict(info, IORegistryEntryName="Apple iPod Media"),
+                         guids, {"disk0"})["identity"]["model"], "Apple iPod")
         self.assertIsNone(devices.mac_candidate(info, guids, {"disk3"}))
         self.assertIsNone(devices.mac_candidate(info, {}, set()))
         for key, value in (("Internal", True), ("Whole", False), ("Writable", False),
@@ -226,7 +229,55 @@ class SelectionTests(unittest.TestCase):
     def test_ioreg_guid_inheritance(self):
         tree = [{"GUID": 42, "IORegistryEntryChildren": [
             {"IORegistryEntryChildren": [{"BSD Name": "disk3"}]}]}]
-        self.assertEqual(devices.mac_guids(tree), {"disk3": "000000000000002a"})
+        for roots in (tree, tree[0]):
+            with self.subTest(root_type=type(roots).__name__):
+                self.assertEqual(devices.mac_guids(roots), {"disk3": "000000000000002a"})
+
+    def test_malformed_registry_is_rejected(self):
+        for tree in ("invalid", ["invalid"], {"IORegistryEntryChildren": "invalid"}):
+            with self.subTest(tree=tree), self.assertRaisesRegex(ValueError, "invalid device registry"):
+                devices.mac_guids(tree)
+
+    def test_mac_high_sierra_fields_preserve_device_guards(self):
+        info = dict(DeviceIdentifier="disk3", WholeDisk=True, Internal=False, BusProtocol="FireWire",
+                    DeviceBlockSize=512, Writable=True, MediaName="Apple Computer, Inc.",
+                    IORegistryEntryName="Apple iPod Media", TotalSize=100000000)
+        guids = {"disk3": "000000000000002a"}
+        candidate = devices.mac_candidate(info, guids, {"disk0"})
+        self.assertEqual(candidate["identity"]["model"], "Apple iPod Media")
+        self.assertIsNone(devices.mac_candidate(info, {}, set()))
+        self.assertIsNone(devices.mac_candidate(info, guids, {"disk3"}))
+        for key, value in (("WholeDisk", False), ("WholeDisk", None), ("Internal", True),
+                           ("Writable", False), ("BusProtocol", "USB"), ("DeviceBlockSize", 4096),
+                           ("DeviceIdentifier", "disk3s2"), ("IORegistryEntryName", "Other disk")):
+            with self.subTest(field=key):
+                self.assertIsNone(devices.mac_candidate(dict(info, **{key: value}), guids, set()))
+        # A contradictory legacy field must not override the diskutil field.
+        self.assertIsNone(devices.mac_candidate(dict(info, WholeDisk=False, Whole=True), guids, set()))
+
+    def test_mac_scan_accepts_high_sierra_plists(self):
+        # Synthetic, privacy-free data with the shapes observed on High Sierra.
+        registry = {"IORegistryEntryChildren": [
+            {"BSD Name": "disk0"},
+            {"GUID": 42, "IORegistryEntryChildren": [
+                {"IORegistryEntryChildren": [{"BSD Name": "disk3"}, {"BSD Name": "disk3s2"}]}]}]}
+        ipod = dict(DeviceIdentifier="disk3", WholeDisk=True, Internal=False, BusProtocol="FireWire",
+                    DeviceBlockSize=512, Writable=True, MediaName="Apple Computer, Inc.",
+                    IORegistryEntryName="Apple iPod Media", TotalSize=100000000)
+        responses = {
+            ("/usr/sbin/diskutil", "info", "-plist", "/"):
+                {"ParentWholeDisk": "disk0", "DeviceIdentifier": "disk0s5"},
+            ("/usr/sbin/diskutil", "info", "-plist", "disk0"):
+                {"DeviceIdentifier": "disk0", "WholeDisk": True, "Internal": True},
+            ("/usr/sbin/diskutil", "info", "-plist", "disk3"): ipod,
+            ("/usr/sbin/diskutil", "list", "-plist", "physical"): {"WholeDisks": ["disk0", "disk3"]},
+            ("/usr/sbin/ioreg", "-a", "-l", "-p", "IOService"): registry,
+        }
+        with patch.object(devices.sys, "platform", "darwin"), \
+             patch.object(devices, "run", side_effect=lambda args: plistlib.dumps(responses[tuple(args)])):
+            self.assertEqual(devices.scan(), [{"id": "disk3", "identity": {
+                "platform": "macos", "hardware_id": "000000000000002a", "model": "Apple iPod Media",
+                "size": 100000000, "sector": 512}}])
 
     def test_same_number_reused_for_different_device_is_rejected(self):
         with patch.object(devices, "scan", return_value=[{"id": "2", "identity": {"id": "new"}}]):

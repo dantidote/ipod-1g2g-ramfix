@@ -34,8 +34,10 @@ preview. **Do not reformat your iPod to get around a compatibility refusal.**
 
 Windows bundles target x64 Windows 10/11. Separate Mac bundles are built for
 Intel and Apple silicon; the build tests run on macOS 15. Older macOS versions
-have not been validated. An app running successfully does not establish that
-the computer/OS can communicate with a FireWire iPod.
+are not comprehensively validated. Intel app startup and interface checks have
+passed on High Sierra 10.13.6. Device discovery accepts High Sierra's single-root
+registry output and its disk identity fields. An app running successfully does
+not establish that a complete firmware installation will work on that computer.
 Apple's built-in FireWire support requires **macOS Sequoia 15 or earlier**;
 macOS Tahoe 26 and later cannot use this installer's FireWire connection.
 See [Apple's port compatibility guidance](https://support.apple.com/en-us/109523).

@@ -36,8 +36,14 @@ def mac_info(name):
 
 def mac_guids(nodes, inherited=None):
     """Associate an IOMedia BSD name with its ancestor FireWire GUID."""
+    # High Sierra emits a single root dictionary; newer ioreg versions may
+    # wrap roots in an array. Iterating a dictionary here would yield strings.
+    if isinstance(nodes, dict):
+        nodes = [nodes]
+    require(isinstance(nodes, list), "macOS returned an invalid device registry")
     result = {}
     for node in nodes:
+        require(isinstance(node, dict), "macOS returned an invalid device registry entry")
         guid = node.get("GUID", inherited)
         if isinstance(guid, int) and guid > 0:
             if "BSD Name" in node:
@@ -64,8 +70,12 @@ def windows_candidates(rows):
 
 def mac_candidate(info, guids, system_disks):
     name = info.get("DeviceIdentifier", "")
-    model = info.get("MediaName") or info.get("IORegistryEntryName") or ""
-    if not (re.fullmatch(r"disk\d+", name) and info.get("Whole") is True and
+    # diskutil can report only the vendor in MediaName ("Apple Computer,
+    # Inc.") while IORegistryEntryName identifies the actual iPod model.
+    model = next((value for value in (info.get("MediaName"), info.get("IORegistryEntryName"))
+                  if isinstance(value, str) and re.search(r"\bipod\b", value, re.I)), "")
+    whole = info.get("WholeDisk", info.get("Whole"))
+    if not (re.fullmatch(r"disk\d+", name) and whole is True and
             info.get("Internal", info.get("DeviceInternal", True)) is False and
             info.get("BusProtocol") == "FireWire" and
             re.search(r"\bipod\b", model, re.I) and name in guids and name not in system_disks and
