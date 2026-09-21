@@ -1,0 +1,152 @@
+[
+  {
+    "version": "1.5",
+    "models": [
+      "1G",
+      "2G"
+    ],
+    "reference_filename": "iPod_1.1.5_2005_02_18.bin.gz",
+    "raw_sha256": "af3950c2253dfd0a9f743440f01634ddb8ce018115c05d9ca0e675912202a3df",
+    "payload_sha256": "98251add80f99732142532814c4ad5b95ee08ab844dd988458a6fa254e1c7c97",
+    "payload_start": 17408,
+    "payload_size": 3234472,
+    "disposer": "0x34c98",
+    "representation": "separate"
+  },
+  {
+    "version": "1.4",
+    "models": [
+      "1G",
+      "2G"
+    ],
+    "reference_filename": "iPod_1.1.4_2004_04_23.bin.gz",
+    "raw_sha256": "088433ba2acde3a5475de5a5ae99cc834fc26919e1d633fc1f2162415613aa84",
+    "payload_sha256": "f06074a157a22c1d5f4504142d5b5f0fdf037e056302548d4714e887c2fde8b3",
+    "payload_start": 17408,
+    "payload_size": 3036304,
+    "disposer": "0x34728",
+    "representation": "contiguous"
+  },
+  {
+    "version": "1.3",
+    "models": [
+      "1G",
+      "2G"
+    ],
+    "reference_filename": "iPod_1.1.3_2003_04_25.bin.gz",
+    "raw_sha256": "009395f31fac0f2e82d67a3476e93c5e855fe45644e54d6a6f7963798a2d6c08",
+    "payload_sha256": "55b945b40c5ad493147fd07579c7bf8d293c5bbd81a01e77658bee2e47692e5b",
+    "payload_start": 17408,
+    "payload_size": 3029112,
+    "disposer": "0x34728",
+    "representation": "contiguous"
+  },
+  {
+    "version": "1.2.6",
+    "models": [
+      "1G",
+      "2G"
+    ],
+    "reference_filename": "iPod_1.1.2.6_2003_03_13.bin.gz",
+    "raw_sha256": "95848c5013a8c4221abc095b26e4a59b952df7d5f98ee7afd78f1b0a36e2fa83",
+    "payload_sha256": "4e2382cb2e04459023854506a6cedbcb1788e209d93b12a55efcce023f6bf14c",
+    "payload_start": 17408,
+    "payload_size": 2869000,
+    "disposer": "0x34110",
+    "representation": "contiguous"
+  },
+  {
+    "version": "1.2.2",
+    "models": [
+      "1G",
+      "2G"
+    ],
+    "reference_filename": "iPod_1.1.2.2_2002_09_26.bin.gz",
+    "raw_sha256": "988f1c6895ed92a075c1af4152bdd9959b3bbdc937c3376850efe67749683022",
+    "payload_sha256": "3ce21193f67c4fcc36b19530a55ab1e73f8002bd7c770e3f5d1720f9383d3639",
+    "payload_start": 17408,
+    "payload_size": 2867304,
+    "disposer": "0x340b4",
+    "representation": "contiguous"
+  },
+  {
+    "version": "1.2.1",
+    "models": [
+      "1G",
+      "2G"
+    ],
+    "reference_filename": "iPod_1.1.2.1_2002_09_06.bin.gz",
+    "raw_sha256": "720197546ab57b69bdad576babe1bcdfe2839bc61b00c2314643ff814070cdc9",
+    "payload_sha256": "a0448d7d613ade54402797dff3ca284606c8db635d03e644ff348a96a2bbfa55",
+    "payload_start": 17408,
+    "payload_size": 2867272,
+    "disposer": "0x340a0",
+    "representation": "contiguous"
+  },
+  {
+    "version": "1.2",
+    "models": [
+      "1G",
+      "2G"
+    ],
+    "reference_filename": "iPod_1.1.2_2002_07_24.bin.gz",
+    "raw_sha256": "f60519e304613476313bc37ba10afcecc73112b3e28601dc8d4d94706819ffcf",
+    "payload_sha256": "1c81836459c8c4bf1e38f6038d02b492cea2f528fabf60634c9a38e853b38bd2",
+    "payload_start": 17408,
+    "payload_size": 2867304,
+    "disposer": "0x34088",
+    "representation": "contiguous"
+  },
+  {
+    "version": "1.1",
+    "models": [
+      "1G"
+    ],
+    "reference_filename": "iPod_1.1.1_2002_03_15.bin.gz",
+    "raw_sha256": "f31dd441467803d1839292554b6ab82ae4fe6ee8b8b72359e937c516714e7195",
+    "payload_sha256": "fb4dea953fcfcaf8c9e71281f50fefb8862940b411f14f49a4a1dc6c6bbefd6a",
+    "payload_start": 17408,
+    "payload_size": 2595544,
+    "disposer": "0x2dd88",
+    "representation": "contiguous"
+  },
+  {
+    "version": "1.0.4",
+    "models": [
+      "1G"
+    ],
+    "reference_filename": "iPod_1.0.4_2001_12_23.bin.gz",
+    "raw_sha256": "f83a262f47fc376bf9086df871f454ca0599b56d025e9ea10378dcff6c7ce4d2",
+    "payload_sha256": "76728400d18a925e675307cec60859b637bd63d65142e402705300dba80bc8e2",
+    "payload_start": 17408,
+    "payload_size": 1370192,
+    "disposer": "0x31d80",
+    "representation": "contiguous"
+  },
+  {
+    "version": "1.0.2",
+    "models": [
+      "1G"
+    ],
+    "reference_filename": "iPod_1.0.2_2001_11_28.bin.gz",
+    "raw_sha256": "35c7b7d348a1862ea2f79a095e1fa00dafb7e4708f6a0109156b62bf1405f004",
+    "payload_sha256": "9da87d629bc64732e0d1aca9db57adff188707be81ea119207aa992edfa30b9a",
+    "payload_start": 17408,
+    "payload_size": 1342864,
+    "disposer": "0x31d80",
+    "representation": "contiguous"
+  },
+  {
+    "version": "1.0",
+    "models": [
+      "1G"
+    ],
+    "reference_filename": "iPod_1.0.0_2001_11_01.bin.gz",
+    "raw_sha256": "3790026652fd82fbfdd38e81e08e287d1de7990c9baa6287504d3e75d9b15c8f",
+    "payload_sha256": "91a1ac70ca27555b6e00e647e4ade726d74bf300e4eb7caf9fe97c736482f003",
+    "payload_start": 17408,
+    "payload_size": 1331664,
+    "disposer": "0x31d80",
+    "representation": "contiguous"
+  }
+]
